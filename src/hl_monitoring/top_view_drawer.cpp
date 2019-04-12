@@ -41,7 +41,9 @@ cv::Point TopViewDrawer::getImgFromField(const Field& f, const cv::Point3f& pos_
 cv::Point TopViewDrawer::getImgFromField(const Field& f, const cv::Point2f& pos_in_field) const
 {
   cv::Point2f center(img_size.width / 2, img_size.height / 2);
-  return center + pos_in_field * getScale(f);
+  cv::Point2f img_offset = pos_in_field * getScale(f);
+  img_offset.y *= -1;//Y axis is inverted on image
+  return center + img_offset;
 }
 
 int TopViewDrawer::getLineWidth(const Field& f) const

@@ -11,6 +11,29 @@
 
 namespace hl_monitoring
 {
+std::string Field::poiType2String(hl_monitoring::Field::POIType type)
+{
+  switch (type)
+  {
+    case POIType::ArenaCorner:
+      return "ArenaCorner";
+    case POIType::LineCorner:
+      return "LineCorner";
+    case POIType::T:
+      return "T";
+    case POIType::X:
+      return "X";
+    case POIType::Center:
+      return "Center";
+    case POIType::PenaltyMark:
+      return "PenaltyMark";
+    case POIType::PostBase:
+      return "PostBase";
+    default:
+      return "UNKOWN";
+  }
+}
+
 Field::Field()
 {
   ball_radius = 0.075;
@@ -68,6 +91,7 @@ void Field::fromJson(const Json::Value& v)
   updateArenaBorders();
   updateGoals();
   updatePenaltyMarks();
+  updatePointsOfInterestByType();
 }
 
 void Field::loadFile(const std::string& path)
@@ -89,7 +113,7 @@ bool Field::isInArena(const cv::Point2f& pos_in_field) const
   return std::fabs(pos_in_field.x) < half_length && std::fabs(pos_in_field.y) < half_width;
 }
 
-const cv::Point3f & Field::getPoint(const std::string & name) const
+const cv::Point3f& Field::getPoint(const std::string& name) const
 {
   return points_of_interest.at(name);
 }
@@ -124,10 +148,17 @@ const std::vector<cv::Point3f>& Field::getPenaltyMarks() const
   return penalty_marks;
 }
 
+const std::map<Field::POIType, std::vector<cv::Point3f>>& Field::getPointsOfInterestByType() const
+{
+  return poi_by_type;
+}
+
 void Field::updatePointsOfInterest()
 {
   points_of_interest.clear();
   points_of_interest["center"] = cv::Point3f(0, 0, 0);
+  points_of_interest["center_x+"] = cv::Point3f(0, center_radius, 0);
+  points_of_interest["center_x-"] = cv::Point3f(0, -center_radius, 0);
   double ac_x = field_length / 2 + border_strip_width_x;
   double ac_y = field_width / 2 + border_strip_width_y;
   points_of_interest["arena_corner++"] = cv::Point3f(ac_x, ac_y, 0);
@@ -158,6 +189,12 @@ void Field::updatePointsOfInterest()
   double mlt_y = field_width / 2;
   points_of_interest["middle_line_t+"] = cv::Point3f(0, mlt_y, 0);
   points_of_interest["middle_line_t-"] = cv::Point3f(0, -mlt_y, 0);
+  double goal_x = field_length / 2;
+  double goal_y = goal_width / 2;
+  points_of_interest["post_base++"] = cv::Point3f(goal_x, goal_y, 0);
+  points_of_interest["post_base+-"] = cv::Point3f(goal_x, -goal_y, 0);
+  points_of_interest["post_base-+"] = cv::Point3f(-goal_x, goal_y, 0);
+  points_of_interest["post_base--"] = cv::Point3f(-goal_x, -goal_y, 0);
 }
 
 void Field::updateWhiteLines()
@@ -178,27 +215,61 @@ void Field::updateWhiteLines()
 
 void Field::updateArenaBorders()
 {
-  arena_borders = {
-    { getPoint("arena_corner++"), getPoint("field_corner+-") },
-    { getPoint("arena_corner+-"), getPoint("field_corner--") },
-    { getPoint("field_corner--"), getPoint("field_corner-+") },
-    { getPoint("field_corner-+"), getPoint("field_corner++") }
-  };
+  arena_borders = { { getPoint("arena_corner++"), getPoint("field_corner+-") },
+                    { getPoint("arena_corner+-"), getPoint("field_corner--") },
+                    { getPoint("field_corner--"), getPoint("field_corner-+") },
+                    { getPoint("field_corner-+"), getPoint("field_corner++") } };
 }
 
 void Field::updateGoals()
 {
-  goals = {
-    { getPoint("field_corner++"), getPoint("field_corner+-") },
-    { getPoint("field_corner-+"), getPoint("field_corner--") }
-  };
-  goal_posts =
-    { getPoint("field_corner++"), getPoint("field_corner+-"), getPoint("field_corner-+"), getPoint("field_corner--") };
+  goals = { { getPoint("field_corner++"), getPoint("field_corner+-") },
+            { getPoint("field_corner-+"), getPoint("field_corner--") } };
+  goal_posts = { getPoint("field_corner++"), getPoint("field_corner+-"), getPoint("field_corner-+"),
+                 getPoint("field_corner--") };
 }
 
 void Field::updatePenaltyMarks()
 {
   penalty_marks = { getPoint("penalty_mark+"), getPoint("penalty_mark-") };
+}
+
+void Field::updatePointsOfInterestByType()
+{
+  poi_by_type.clear();
+  for (const auto& entry : points_of_interest)
+  {
+    POIType type = POIType::Unknown;
+    if (entry.first.find("arena_corner") != std::string::npos)
+    {
+      type = POIType::ArenaCorner;
+    }
+    else if (entry.first.find("corner") != std::string::npos)
+    {
+      type = POIType::LineCorner;
+    }
+    else if (entry.first.find("_t") != std::string::npos)
+    {
+      type = POIType::T;
+    }
+    else if (entry.first.find("_x") != std::string::npos)
+    {
+      type = POIType::X;
+    }
+    else if (entry.first.find("penalty_mark") != std::string::npos)
+    {
+      type = POIType::PenaltyMark;
+    }
+    else if (entry.first.find("post_base") != std::string::npos)
+    {
+      type = POIType::PostBase;
+    }
+    else if (entry.first.find("center") != std::string::npos)
+    {
+      type = POIType::Center;
+    }
+    poi_by_type[type].push_back(entry.second);
+  }
 }
 
 void Field::tagLines(const CameraMetaInformation& camera_information, cv::Mat* tag_img, const cv::Scalar& line_color,

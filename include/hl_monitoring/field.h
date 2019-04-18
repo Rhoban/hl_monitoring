@@ -48,6 +48,20 @@ class Field
 public:
   typedef std::pair<cv::Point3f, cv::Point3f> Segment;
 
+  enum POIType
+  {
+    ArenaCorner,
+    LineCorner,
+    T,
+    X,
+    Center,
+    PenaltyMark,
+    PostBase,
+    Unknown
+  };
+
+  static std::string poiType2String(hl_monitoring::Field::POIType type);
+
   Field();
 
   Json::Value toJson() const;
@@ -62,7 +76,7 @@ public:
   /**
    * Throws an out_of_range exception on invalid name
    */
-  const cv::Point3f & getPoint(const std::string & name) const;
+  const cv::Point3f& getPoint(const std::string& name) const;
 
   const std::map<std::string, cv::Point3f>& getPointsOfInterest() const;
   const std::vector<Segment>& getArenaBorders() const;
@@ -70,6 +84,8 @@ public:
   const std::vector<Segment>& getGoals() const;
   const std::vector<cv::Point3f>& getGoalPosts() const;
   const std::vector<cv::Point3f>& getPenaltyMarks() const;
+
+  const std::map<POIType, std::vector<cv::Point3f>>& getPointsOfInterestByType() const;
 
   void tagLines(const CameraMetaInformation& camera_information, cv::Mat* tag_img, const cv::Scalar& line_color,
                 double line_thickness, int nb_segments = 1);
@@ -172,10 +188,20 @@ private:
   void updatePenaltyMarks();
 
   /**
-   * Stores points of interest visually identifiable of the field along with a given name
+   * Synchronize poi_by_type based on points_of_interest
+   */
+  void updatePointsOfInterestByType();
+
+  /**
+   * Stores points of interest visually identifiable of the field along with a given name.
    * e.g.: corners penalty marks etc...
    */
   std::map<std::string, cv::Point3f> points_of_interest;
+
+  /**
+   * Stores points of interest positions by type of feature
+   */
+  std::map<POIType, std::vector<cv::Point3f>> poi_by_type;
 
   /**
    * List all the white segments in the field

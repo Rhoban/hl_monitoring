@@ -128,7 +128,6 @@ int main(int argc, char** argv)
               cv::Point2f pos_in_img = fieldToImg(pos_in_field, camera_information);
               int circle_size = 10;
               cv::circle(display_img, pos_in_img, circle_size, color, cv::FILLED);
-              double angle = weighted_pose.pose().dir().mean();
             }
           }
         }

@@ -87,6 +87,9 @@ public:
 
   const std::map<POIType, std::vector<cv::Point3f>>& getPointsOfInterestByType() const;
 
+  void tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
+                           const cv::Mat& tvec, cv::Mat* tag_img);
+
   void tagLines(const CameraMetaInformation& camera_information, cv::Mat* tag_img, const cv::Scalar& line_color,
                 double line_thickness, int nb_segments = 1);
   void tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,

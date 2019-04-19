@@ -272,6 +272,22 @@ void Field::updatePointsOfInterestByType()
   }
 }
 
+void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
+                                const cv::Mat& tvec, cv::Mat* tag_img)
+{
+  for (const auto& entry : poi_by_type)
+  {
+    POIType type = entry.first;
+    const std::vector<cv::Point3f>& field_positions = entry.second;
+    std::vector<cv::Point2f> img_points;
+    cv::projectPoints(field_positions, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
+    for (const cv::Point2f& img_pos : img_points)
+    {
+      cv::circle(*tag_img, img_pos, 5, cv::Scalar(255, 0, 255), CV_FILLED);
+    }
+  }
+}
+
 void Field::tagLines(const CameraMetaInformation& camera_information, cv::Mat* tag_img, const cv::Scalar& line_color,
                      double line_thickness, int nb_segments)
 {

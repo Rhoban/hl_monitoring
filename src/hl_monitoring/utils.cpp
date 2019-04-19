@@ -69,6 +69,19 @@ void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose)
   }
 }
 
+cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec)
+{
+  cv::Mat point(3,1,CV_64F);
+  point.at<double>(0) = pos_in_field.x;
+  point.at<double>(1) = pos_in_field.y;
+  point.at<double>(2) = pos_in_field.z;
+
+  cv::Mat R;
+  cv::Rodrigues(rvec, R);
+  cv::Mat camera_point = R * point + tvec;
+  return cv::Point3f(camera_point.at<double>(0), camera_point.at<double>(1), camera_point.at<double>(2));
+}
+
 cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information)
 {
   if (!camera_information.has_camera_parameters() || !camera_information.has_pose())

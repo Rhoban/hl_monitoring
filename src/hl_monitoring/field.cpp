@@ -277,13 +277,15 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
 {
   for (const auto& entry : poi_by_type)
   {
-    POIType type = entry.first;
     const std::vector<cv::Point3f>& field_positions = entry.second;
     std::vector<cv::Point2f> img_points;
     cv::projectPoints(field_positions, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
-    for (const cv::Point2f& img_pos : img_points)
+    for (size_t idx=0; idx < field_positions.size();idx++)
     {
-      cv::circle(*tag_img, img_pos, 5, cv::Scalar(255, 0, 255), CV_FILLED);
+      cv::Point3f camera_pos = hl_monitoring::fieldToCamera(field_positions[idx], rvec, tvec);
+      if (camera_pos.z > 0) {
+        cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
+      }
     }
   }
 }
@@ -319,6 +321,19 @@ void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coe
     {
       std::vector<cv::Point3f> object_points = { segment.first + i * object_diff / nb_segments,
                                                  segment.first + (i + 1) * object_diff / nb_segments };
+      bool has_point_behind = false;
+      for (const cv::Point3f& obj_point : object_points)
+      {
+        cv::Point3f point_in_camera = hl_monitoring::fieldToCamera(obj_point, rvec, tvec);
+        if (point_in_camera.z <= 0)
+        {
+          has_point_behind = true;
+        }
+      }
+      if (has_point_behind)
+      {
+        continue;
+      }
       std::vector<cv::Point2f> img_points;
       cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
       // When point is outside of image, screw up the drawing

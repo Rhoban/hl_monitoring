@@ -19,6 +19,11 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec);
 void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose);
 
+/**
+ * Convert a point from the field basis to the camera basis, should be used to check if points are facing the camera
+ */
+cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec);
+
 cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information);
 
 void checkMember(const Json::Value& v, const std::string& key);

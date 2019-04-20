@@ -19,12 +19,21 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec);
 void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose);
 
+cv::Size getImgSize(const CameraMetaInformation& camera_information);
+
 /**
  * Convert a point from the field basis to the camera basis, should be used to check if points are facing the camera
  */
 cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec);
 
 cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information);
+
+/**
+ * Convert from field position to an image position based on camera_information.
+ * @return Is the img position valid (for points behind camera, the underlying implementation return image position of
+ * the symetric point), if the point is outside of image, then return false as well
+ */
+bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information, cv::Point2f* img_pos);
 
 void checkMember(const Json::Value& v, const std::string& key);
 
@@ -49,6 +58,15 @@ void readVal<double>(const Json::Value& v, const std::string& key, double* dst);
 
 template <>
 void readVal<std::string>(const Json::Value& v, const std::string& key, std::string* dst);
+
+/**
+ * Also check that all values of the scalar are in [0,255]
+ */
+template <>
+void readVal<cv::Scalar>(const Json::Value& v, const std::string& key, cv::Scalar* dst);
+
+Json::Value toJson(const cv::Scalar& color);
+
 
 /**
  * Place v[key] in 'dst', if v is not an object or if v does not contain key, do

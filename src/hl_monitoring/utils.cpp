@@ -69,6 +69,12 @@ void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose)
   }
 }
 
+cv::Size getImgSize(const CameraMetaInformation& camera_information)
+{
+  const IntrinsicParameters& p = camera_information.camera_parameters();
+  return cv::Size(p.img_width(), p.img_height());
+}
+
 cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec)
 {
   cv::Mat point(3,1,CV_64F);
@@ -96,6 +102,16 @@ cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformat
   std::vector<cv::Point2f> img_points;
   cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
   return img_points[0];
+}
+
+bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information, cv::Point2f* img_pos)
+{
+  cv::Mat rvec, tvec;
+  pose3DToCV(camera_information.pose(), &rvec, &tvec);
+  *img_pos = fieldToImg(pos_in_field, camera_information);
+  cv::Point3f camera_point = fieldToCamera(pos_in_field, rvec, tvec);
+  cv::Size img_size = getImgSize(camera_information);
+  return camera_point.z > 0 && img_pos->x >= 0 && img_pos->y >= 0 && img_pos->x < img_size.width && img_pos->y < img_size.height;
 }
 
 void checkMember(const Json::Value& v, const std::string& key)
@@ -148,6 +164,42 @@ void readVal<std::string>(const Json::Value& v, const std::string& key, std::str
     throw std::runtime_error(HL_DEBUG + "Expecting a string for key '" + key + "'");
   }
   *dst = v[key].asString();
+}
+
+template <>
+void readVal<cv::Scalar>(const Json::Value& v, const std::string& key, cv::Scalar* dst)
+{
+  checkMember(v, key);
+  if (!v[key].isArray())
+  {
+    throw std::runtime_error(HL_DEBUG + "Expecting an array for '" + key + "'");
+  }
+  if (v[key].size() != 3)
+  {
+    throw std::runtime_error(HL_DEBUG + "Invalid size for array at '" + key + "', expecting 3");
+  }
+  for (Json::ArrayIndex idx=0; idx<3; idx++)
+  {
+    if (!v[key][idx].isInt())
+    {
+      throw std::runtime_error(HL_DEBUG + "Invalid type for " + key + "[" + std::to_string(idx) + "], expecting int");
+    }
+    int val = v[key][idx].asInt();
+    if (val < 0 || val > 255)
+    {
+      throw std::runtime_error(HL_DEBUG + "Invalide value for " + key + "[" + std::to_string(idx) + "]: range is [0,255]");
+    }
+    (*dst)[idx] = (char)val;
+  }
+}
+
+Json::Value toJson(const cv::Scalar& color)
+{
+  Json::Value v;
+  for (int i=0; i<3; i++){
+    v[i] = color[i];
+  }
+  return v;
 }
 
 }  // namespace hl_monitoring

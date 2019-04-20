@@ -8,6 +8,7 @@
 #include <hl_monitoring/field.h>
 #include <hl_monitoring/monitoring_manager.h>
 #include <hl_monitoring/utils.h>
+#include <hl_monitoring/drawers/position_drawer.h>
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -107,6 +108,7 @@ int main(int argc, char** argv)
         // Basic drawing of robot estimated position
         for (const auto& robot_entry : status.robot_messages)
         {
+          PositionDrawer position_drawer;
           uint32_t team_id = robot_entry.first.team_id();
           cv::Scalar color = cv::Scalar(0, 0, 0);
           if (colors_by_team.count(team_id) == 0)
@@ -117,17 +119,14 @@ int main(int argc, char** argv)
           {
             color = colors_by_team[team_id];
           }
+          position_drawer.setColor(color);
           if (robot_entry.second.has_perception())
           {
             const Perception& perception = robot_entry.second.perception();
             for (int pos_idx = 0; pos_idx < perception.self_in_field_size(); pos_idx++)
             {
               const WeightedPose& weighted_pose = perception.self_in_field(pos_idx);
-              const PositionDistribution& position = weighted_pose.pose().position();
-              cv::Point3f pos_in_field(position.x(), position.y(), 0.0);
-              cv::Point2f pos_in_img = fieldToImg(pos_in_field, camera_information);
-              int circle_size = 10;
-              cv::circle(display_img, pos_in_img, circle_size, color, cv::FILLED);
+              position_drawer.draw(camera_information, weighted_pose.pose().position(), &display_img);
             }
           }
         }

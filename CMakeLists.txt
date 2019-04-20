@@ -72,6 +72,7 @@ include_directories(${DELEGATE_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )
 
 set(SOURCES_DIRECTORIES
   src/hl_monitoring
+  src/hl_monitoring/drawers
   )
 
 #Include Sources sub sources

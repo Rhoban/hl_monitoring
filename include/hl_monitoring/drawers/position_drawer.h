@@ -4,7 +4,7 @@
 
 namespace hl_monitoring
 {
-class PositionDrawer : Drawer<hl_communication::PositionDistribution>
+class PositionDrawer : public Drawer<hl_communication::PositionDistribution>
 {
 public:
   PositionDrawer();

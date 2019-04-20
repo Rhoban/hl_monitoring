@@ -223,10 +223,10 @@ void Field::updateArenaBorders()
 
 void Field::updateGoals()
 {
-  goals = { { getPoint("field_corner++"), getPoint("field_corner+-") },
-            { getPoint("field_corner-+"), getPoint("field_corner--") } };
-  goal_posts = { getPoint("field_corner++"), getPoint("field_corner+-"), getPoint("field_corner-+"),
-                 getPoint("field_corner--") };
+  goals = { { getPoint("post_base++"), getPoint("post_base+-") },
+            { getPoint("post_base-+"), getPoint("post_base--") } };
+  goal_posts = { getPoint("post_base++"), getPoint("post_base+-"), getPoint("post_base-+"),
+                 getPoint("post_base--") };
 }
 
 void Field::updatePenaltyMarks()

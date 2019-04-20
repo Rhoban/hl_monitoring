@@ -98,6 +98,9 @@ int main(int argc, char** argv)
     std::map<std::string, CalibratedImage> images_by_source = manager.getCalibratedImages(now);
     int64_t post_get_images = getTimeStamp();
 
+    TopViewDrawer top_view_drawer;
+
+    // Annotation of provided images
     for (const auto& entry : images_by_source)
     {
       cv::Mat display_img = entry.second.getImg().clone();
@@ -125,6 +128,26 @@ int main(int argc, char** argv)
       }
       cv::imshow(entry.first, display_img);
     }
+    // Annotation of TopView
+    cv::Mat top_view = top_view_drawer.getImg(field);
+    for (const auto& robot_entry : status.robot_messages)
+    {
+      PlayerDrawer player_drawer;
+      uint32_t team_id = robot_entry.first.team_id();
+      cv::Scalar color = cv::Scalar(0, 0, 0);
+      if (colors_by_team.count(team_id) == 0)
+      {
+        std::cerr << "Unknown color for team " << team_id << ": using black (default)" << std::endl;
+      }
+      else
+      {
+        color = colors_by_team[team_id];
+      }
+      player_drawer.setColor(color);
+      player_drawer.draw(field, top_view_drawer, robot_entry.second, &top_view);
+    }
+    cv::imshow("TopView", top_view);
+
     int64_t post_annotation = getTimeStamp();
     char key = cv::waitKey(1);
     if (key == 'q' || key == 'Q')
@@ -132,7 +155,8 @@ int main(int argc, char** argv)
       break;
     }
 
-    if (verbose_arg.getValue()) {
+    if (verbose_arg.getValue())
+    {
       std::cout << "\tUpdate time: " << ((post_manager_update - loop_start) / 1000) << std::endl;
       std::cout << "\tGet status time: " << ((post_get_status - post_manager_update) / 1000) << std::endl;
       std::cout << "\tGet images time: " << ((post_get_images - post_get_status) / 1000) << std::endl;

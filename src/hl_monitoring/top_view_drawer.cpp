@@ -10,15 +10,16 @@ TopViewDrawer::TopViewDrawer() : TopViewDrawer(cv::Size(600, 400))
 TopViewDrawer::TopViewDrawer(const cv::Size& img_size)
   : img_size(img_size)
   , background_color(0, 0, 0)
-  , field_color(0, 255, 0)
+  , field_color(0, 180, 0)
   , lines_color(255, 255, 255)
-  , goals_color(255, 0, 255)
+  , goals_color(0, 0, 255)
 {
 }
 
 cv::Mat TopViewDrawer::getImg(const Field& f) const
 {
   cv::Mat result(img_size, CV_8UC3, background_color);
+  drawTurf(f, &result);
   drawLines(f, &result);
   drawCenter(f, &result);
   drawPenaltyMarks(f, &result);
@@ -65,7 +66,7 @@ void TopViewDrawer::drawTurf(const Field& f, cv::Mat* dst) const
 {
   cv::Point pt1 = getImgFromField(f, f.getPoint("arena_corner--"));
   cv::Point pt2 = getImgFromField(f, f.getPoint("arena_corner++"));
-  cv::rectangle(*dst, pt1, pt2, background_color, CV_FILLED);
+  cv::rectangle(*dst, pt1, pt2, field_color, CV_FILLED);
 }
 
 void TopViewDrawer::drawLines(const Field& f, cv::Mat* dst) const

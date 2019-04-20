@@ -8,9 +8,13 @@
 
   <maintainer email="lhofer@labri.fr">Ludovic Hofer</maintainer>
 
-  <license>MIT</license>
+  <license>LGPLv3</license>
 
   <author email="lhofer@labri.fr">Ludovic Hofer</author>
+  <author email="lucie.mathe@etu.u-bordeaux.fr">Lucie Mathé</author>
+  <author email="escure.f@gmail.com">Florian Escure</author>
+  <author email="lucie.chasan@etu.u-bordeaux.fr">Lucie Chasan</author>
+  <author email="montero.eliott@gmail.com">Eliott Montero</author>
 
   <buildtool_depend>catkin</buildtool_depend>
 

@@ -8,7 +8,7 @@
 #include <hl_monitoring/field.h>
 #include <hl_monitoring/monitoring_manager.h>
 #include <hl_monitoring/utils.h>
-#include <hl_monitoring/drawers/player_drawer.h>
+#include <hl_monitoring/drawers/team_drawer.h>
 
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
@@ -68,19 +68,6 @@ int main(int argc, char** argv)
     int64_t post_manager_update = getTimeStamp();
 
     MessageManager::Status status = manager.getStatus(now);
-    std::vector<cv::Scalar> team_colors = { cv::Scalar(255, 255, 0), cv::Scalar(255, 0, 255) };
-    std::map<uint32_t, cv::Scalar> colors_by_team;
-    for (int idx = 0; idx < status.gc_message.teams_size(); idx++)
-    {
-      const GCTeamMsg& team_msg = status.gc_message.teams(idx);
-      if (team_msg.has_team_number() && team_msg.has_team_color())
-      {
-        uint32_t team_number = team_msg.team_number();
-        uint32_t team_color = team_msg.team_color();
-        colors_by_team[team_number] = team_colors[team_color];
-      }
-    }
-
     int64_t post_get_status = getTimeStamp();
 
     if (verbose_arg.getValue())
@@ -99,6 +86,7 @@ int main(int argc, char** argv)
     int64_t post_get_images = getTimeStamp();
 
     TopViewDrawer top_view_drawer;
+    TeamDrawer team_drawer;
 
     // Annotation of provided images
     for (const auto& entry : images_by_source)
@@ -108,44 +96,13 @@ int main(int argc, char** argv)
       {
         const CameraMetaInformation& camera_information = entry.second.getCameraInformation();
         field.tagLines(camera_information, &display_img, cv::Scalar(0, 0, 0), 1, 10);
-        // Basic drawing of robot estimated position
-        for (const auto& robot_entry : status.robot_messages)
-        {
-          PlayerDrawer player_drawer;
-          uint32_t team_id = robot_entry.first.team_id();
-          cv::Scalar color = cv::Scalar(0, 0, 0);
-          if (colors_by_team.count(team_id) == 0)
-          {
-            std::cerr << "Unknown color for team " << team_id << ": using black (default)" << std::endl;
-          }
-          else
-          {
-            color = colors_by_team[team_id];
-          }
-          player_drawer.setColor(color);
-          player_drawer.draw(camera_information, robot_entry.second, &display_img);
-        }
+        team_drawer.drawNatural(camera_information, status, &display_img);
       }
       cv::imshow(entry.first, display_img);
     }
     // Annotation of TopView
     cv::Mat top_view = top_view_drawer.getImg(field);
-    for (const auto& robot_entry : status.robot_messages)
-    {
-      PlayerDrawer player_drawer;
-      uint32_t team_id = robot_entry.first.team_id();
-      cv::Scalar color = cv::Scalar(0, 0, 0);
-      if (colors_by_team.count(team_id) == 0)
-      {
-        std::cerr << "Unknown color for team " << team_id << ": using black (default)" << std::endl;
-      }
-      else
-      {
-        color = colors_by_team[team_id];
-      }
-      player_drawer.setColor(color);
-      player_drawer.draw(field, top_view_drawer, robot_entry.second, &top_view);
-    }
+    team_drawer.drawTopView(field, top_view_drawer, status, &top_view);
     cv::imshow("TopView", top_view);
 
     int64_t post_annotation = getTimeStamp();

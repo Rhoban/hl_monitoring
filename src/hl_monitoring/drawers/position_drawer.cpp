@@ -17,21 +17,15 @@ PositionDrawer::~PositionDrawer()
 {
 }
 
-void PositionDrawer::draw(const CameraMetaInformation& camera_information, const PositionDistribution& pos, cv::Mat* out)
+void PositionDrawer::draw(FieldToImgConverter converter, const PositionDistribution& pos, cv::Mat* out)
 {
   cv::Point3f field_pos(pos.x(), pos.y(), 0.0);
   cv::Point2f img_pos;
-  bool valid = fieldToImg(field_pos,camera_information, &img_pos);
+  bool valid = converter(field_pos, &img_pos);
   if (valid)
   {
     cv::circle(*out, img_pos, circle_radius, color, cv::FILLED);
   }
-}
-
-void PositionDrawer::draw(const Field& f, const TopViewDrawer& top_view_drawer, const PositionDistribution& pos, cv::Mat* out)
-{
-  cv::Point img_pos = top_view_drawer.getImgFromField(f, cv::Point3f(pos.x(), pos.y(), 0.0));  
-  cv::circle(*out, img_pos, circle_radius, color, cv::FILLED);
 }
 
 void PositionDrawer::setColor(const cv::Scalar& new_color)

@@ -9,10 +9,7 @@ class PoseDrawer : public Drawer<hl_communication::PoseDistribution>
 public:
   PoseDrawer();
   ~PoseDrawer();
-  void draw(const CameraMetaInformation& camera_information, const hl_communication::PoseDistribution& data,
-            cv::Mat* out) override;
-  void draw(const Field& f, const TopViewDrawer& top_view_drawer, const hl_communication::PoseDistribution& data,
-            cv::Mat* out) override;
+  void draw(FieldToImgConverter converter, const hl_communication::PoseDistribution& data, cv::Mat* out) override;
   Json::Value toJson() const override;
   void fromJson(const Json::Value& v) override;
 

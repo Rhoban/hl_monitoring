@@ -17,7 +17,7 @@ PlayerDrawer::~PlayerDrawer()
 {
 }
 
-void PlayerDrawer::draw(const CameraMetaInformation& camera_information, const RobotMsg& robot, cv::Mat* out)
+void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv::Mat* out)
 {
   if (robot.has_perception())
   {
@@ -26,21 +26,7 @@ void PlayerDrawer::draw(const CameraMetaInformation& camera_information, const R
     {
       // Currently only draw first pose
       const WeightedPose& weighted_pose = perception.self_in_field(0);
-      pose_drawer.draw(camera_information, weighted_pose.pose(), out);
-    }
-  }
-}
-
-void PlayerDrawer::draw(const Field& f, const TopViewDrawer& top_view_drawer, const RobotMsg& robot, cv::Mat* out)
-{
-  if (robot.has_perception())
-  {
-    const Perception& perception = robot.perception();
-    if (perception.self_in_field_size() > 0)
-    {
-      // Currently only draw first position
-      const WeightedPose& weighted_pose = perception.self_in_field(0);
-      pose_drawer.draw(f, top_view_drawer, weighted_pose.pose(), out);
+      pose_drawer.draw(converter, weighted_pose.pose(), out);
     }
   }
 }
@@ -55,12 +41,23 @@ Json::Value PlayerDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();
   v["color"] = hl_monitoring::toJson(color);
+  v["pose_drawer"] = pose_drawer.toJson();
   return v;
 }
 
 void PlayerDrawer::fromJson(const Json::Value& v)
 {
-  tryReadVal(v, "color", &color);
+  Drawer::fromJson(v);
+  cv::Scalar old_color = color;
+  tryReadVal(v, "color", &old_color);
+  if (old_color != color)
+  {
+    setColor(old_color);
+  }
+  if (v.isMember("pose_drawer"))
+  {
+    pose_drawer.fromJson(v["pose_drawer"]);
+  }
 }
 
 }  // namespace hl_monitoring

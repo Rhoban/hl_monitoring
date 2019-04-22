@@ -214,9 +214,13 @@ std::map<std::string, CalibratedImage> MonitoringManager::getCalibratedImages(ui
   return images;
 }
 
-hl_communication::MessageManager::Status MonitoringManager::getStatus(uint64_t time_stamp)
+const hl_communication::MessageManager& MonitoringManager::getMessageManager() const
 {
-  return message_manager->getStatus(time_stamp);
+  if (!message_manager)
+  {
+    throw std::runtime_error(HL_DEBUG + " no message manager in MonitoringManager");
+  }
+  return *message_manager;
 }
 
 const ImageProvider& MonitoringManager::getImageProvider(const std::string& name) const

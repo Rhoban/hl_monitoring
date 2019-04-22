@@ -36,7 +36,7 @@ public:
 
   std::map<std::string, CalibratedImage> getCalibratedImages(uint64_t time_stamp);
 
-  hl_communication::MessageManager::Status getStatus(uint64_t time_stamp);
+  const hl_communication::MessageManager& getMessageManager() const;
 
   /**
    * Returns non-mutable access to the given image provider if it exists.

@@ -67,7 +67,8 @@ int main(int argc, char** argv)
     }
     int64_t post_manager_update = getTimeStamp();
 
-    MessageManager::Status status = manager.getStatus(now);
+    uint64_t history_length = 2 * 1000 * 1000;  //[us]
+    MessageManager::Status status = manager.getMessageManager().getStatus(now, history_length);
     int64_t post_get_status = getTimeStamp();
 
     if (verbose_arg.getValue())

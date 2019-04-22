@@ -1,4 +1,5 @@
 set(SOURCES
+  arrow_drawer.cpp
   player_drawer.cpp
   position_drawer.cpp
   pose_drawer.cpp

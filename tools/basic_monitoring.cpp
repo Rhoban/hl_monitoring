@@ -86,7 +86,7 @@ int main(int argc, char** argv)
     std::map<std::string, CalibratedImage> images_by_source = manager.getCalibratedImages(now);
     int64_t post_get_images = getTimeStamp();
 
-    TopViewDrawer top_view_drawer;
+    TopViewDrawer top_view_drawer(cv::Size(1200, 800));
     TeamDrawer team_drawer;
 
     // Annotation of provided images

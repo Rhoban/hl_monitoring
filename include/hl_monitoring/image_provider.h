@@ -53,6 +53,12 @@ public:
   virtual uint64_t getStart() const;
 
   /**
+   * Return the last time_stamp of the images received
+   * If no element is found, returns 0
+   */
+  virtual uint64_t getEnd() const;
+
+  /**
    * Returns the number of frames currently available in the image provider
    */
   virtual size_t getNbFrames() const;

@@ -22,6 +22,13 @@ uint64_t ImageProvider::getStart() const
   return indices_by_time_stamp.begin()->first;
 }
 
+uint64_t ImageProvider::getEnd() const
+{
+  if (indices_by_time_stamp.size() == 0)
+    return 0;
+  return indices_by_time_stamp.rbegin()->first;
+}
+
 size_t ImageProvider::getNbFrames() const
 {
   return nb_frames;

@@ -10,6 +10,8 @@ public:
   TopViewDrawer();
   TopViewDrawer(const cv::Size& img_size);
 
+  void setImgSize(const cv::Size& new_img_size);
+
   /**
    * Return an Image with the field drawn on it
    */

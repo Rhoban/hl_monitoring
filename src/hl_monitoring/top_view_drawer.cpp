@@ -16,6 +16,11 @@ TopViewDrawer::TopViewDrawer(const cv::Size& img_size)
 {
 }
 
+void TopViewDrawer::setImgSize(const cv::Size& new_img_size)
+{
+  img_size = new_img_size;
+}
+
 cv::Mat TopViewDrawer::getImg(const Field& f) const
 {
   cv::Mat result(img_size, CV_8UC3, background_color);

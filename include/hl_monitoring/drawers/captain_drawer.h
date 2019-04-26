@@ -16,6 +16,8 @@ public:
   Json::Value toJson() const override;
   void fromJson(const Json::Value& v) override;
 
+  void setColor(const cv::Scalar& new_color);
+
 private:
   PositionDrawer ball_drawer;
   PoseDrawer opponent_drawer;

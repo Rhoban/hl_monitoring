@@ -30,6 +30,7 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
       color = color_by_team_id[team_id];
     }
     player_drawer.setColor(color);
+    captain_drawer.setColor(color);
     for (const RobotMsg& msg : entry.second)
     {
       uint32_t robot_id = msg.robot_id().robot_id();

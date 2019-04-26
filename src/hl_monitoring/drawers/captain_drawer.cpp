@@ -8,7 +8,7 @@ namespace hl_monitoring
 {
 CaptainDrawer::CaptainDrawer()
 {
-  ball_drawer.setRadius(10);
+  ball_drawer.setRadius(7);
   opponent_drawer.setRadius(30);
 }
 
@@ -48,6 +48,12 @@ void CaptainDrawer::fromJson(const Json::Value& v)
   {
     opponent_drawer.fromJson(v["opponent_drawer"]);
   }
+}
+
+void CaptainDrawer::setColor(const cv::Scalar& new_color)
+{
+  ball_drawer.setColor(new_color);
+  opponent_drawer.setColor(new_color);
 }
 
 }  // namespace hl_monitoring

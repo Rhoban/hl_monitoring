@@ -201,6 +201,15 @@ void MonitoringManager::update()
   message_manager->update();
 }
 
+CalibratedImage MonitoringManager::getCalibratedImage(const std::string& provider_name, uint64_t time_stamp)
+{
+  if (image_providers.count(provider_name) == 0)
+  {
+    throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name + "'");
+  }
+  return image_providers.at(provider_name)->getCalibratedImage(time_stamp);
+}
+
 std::map<std::string, CalibratedImage> MonitoringManager::getCalibratedImages(uint64_t time_stamp)
 {
   std::map<std::string, CalibratedImage> images;

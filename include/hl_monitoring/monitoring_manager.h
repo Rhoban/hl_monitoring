@@ -34,6 +34,7 @@ public:
 
   void update();
 
+  CalibratedImage getCalibratedImage(const std::string& provider_name, uint64_t time_stamp);
   std::map<std::string, CalibratedImage> getCalibratedImages(uint64_t time_stamp);
 
   const hl_communication::MessageManager& getMessageManager() const;

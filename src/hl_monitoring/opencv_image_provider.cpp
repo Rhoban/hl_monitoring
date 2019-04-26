@@ -79,9 +79,10 @@ CalibratedImage OpenCVImageProvider::getCalibratedImage(uint64_t time_stamp)
   {
     throw std::runtime_error(HL_DEBUG + " no frames found in the stream");
   }
-  if (time_stamp < indices_by_time_stamp.rbegin()->first)
+  uint64_t last_frame = indices_by_time_stamp.rbegin()->first;
+  if (time_stamp < last_frame)
   {
-    throw std::runtime_error(HL_DEBUG + " asking for frames in the past is not supported");
+    throw std::runtime_error(HL_DEBUG + " asking for frames in the past is not supported (current_index:) " + std::to_string(last_frame));
   }
 
   int index = indices_by_time_stamp.size() - 1;

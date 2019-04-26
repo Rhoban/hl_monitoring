@@ -32,10 +32,14 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
     player_drawer.setColor(color);
     for (const RobotMsg& msg : entry.second)
     {
-      player_drawer.draw(converter, msg, out);
-      if (msg.has_captain())
+      uint32_t robot_id = msg.robot_id().robot_id();
+      if (!isPenalized(status.gc_message, team_id, robot_id))
       {
-        captain_drawer.draw(converter, msg.captain(), out);
+        player_drawer.draw(converter, msg, out);
+        if (msg.has_captain())
+        {
+          captain_drawer.draw(converter, msg.captain(), out);
+        }
       }
     }
   }

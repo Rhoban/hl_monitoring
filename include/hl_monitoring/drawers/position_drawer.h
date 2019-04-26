@@ -14,6 +14,8 @@ public:
   void fromJson(const Json::Value& v) override;
 
   void setColor(const cv::Scalar& new_color);
+
+  void setRadius(double new_radius);
 private:
   /**
    * Radius of the circle used for the position [px]

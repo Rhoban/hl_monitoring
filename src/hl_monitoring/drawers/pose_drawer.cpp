@@ -55,6 +55,11 @@ void PoseDrawer::setColor(const cv::Scalar& new_color)
   color = new_color;
 }
 
+void PoseDrawer::setRadius(double new_radius)
+{
+  circle_radius = new_radius;
+}
+
 Json::Value PoseDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();

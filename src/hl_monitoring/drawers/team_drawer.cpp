@@ -33,6 +33,10 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
     for (const RobotMsg& msg : entry.second)
     {
       player_drawer.draw(converter, msg, out);
+      if (msg.has_captain())
+      {
+        captain_drawer.draw(converter, msg.captain(), out);
+      }
     }
   }
 }
@@ -41,6 +45,7 @@ Json::Value TeamDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();
   v["player"] = player_drawer.toJson();
+  v["captain"] = captain_drawer.toJson();
   return v;
 }
 
@@ -50,6 +55,10 @@ void TeamDrawer::fromJson(const Json::Value& v)
   if (v.isMember("player"))
   {
     player_drawer.fromJson(v["player"]);
+  }
+  if (v.isMember("captain"))
+  {
+    captain_drawer.fromJson(v["captain"]);
   }
 }
 

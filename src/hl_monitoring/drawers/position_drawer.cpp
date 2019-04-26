@@ -33,6 +33,11 @@ void PositionDrawer::setColor(const cv::Scalar& new_color)
   color = new_color;
 }
 
+void PositionDrawer::setRadius(double new_radius)
+{
+  circle_radius = new_radius;
+}
+
 Json::Value PositionDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();

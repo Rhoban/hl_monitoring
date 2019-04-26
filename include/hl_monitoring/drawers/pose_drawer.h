@@ -18,24 +18,14 @@ public:
   void setRadius(double new_radius);
 private:
   /**
-   * Radius of the circle used for the position [px]
+   * Radius of the circle used for the position, also used for direction indicator [px]
    */
   double circle_radius;
 
   /**
-   * Length of the arrow [px]
+   * Thickness of the pose circle and the direction line [px]
    */
-  double arrow_length;
-
-  /**
-   * Arrow width [px]
-   */
-  double arrow_thickness;
-
-  /**
-   * Length of the tip of the arrow over arrow_length
-   */
-  double arrow_tip_ratio;
+  double thickness;
 
   cv::Scalar color;
 };

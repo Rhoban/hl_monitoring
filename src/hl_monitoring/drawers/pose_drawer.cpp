@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PoseDrawer::PoseDrawer() : circle_radius(4.0), arrow_length(16.0), arrow_thickness(2.0), arrow_tip_ratio(0.3), color(0, 0, 0)
+PoseDrawer::PoseDrawer() : circle_radius(12.0), thickness(3.0), color(0, 0, 0)
 {
 }
 
@@ -30,7 +30,7 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
   bool valid_pos = converter(field_pos, &img_pos);
   if (valid_pos)
   {
-    cv::circle(*out, img_pos, circle_radius, color, cv::FILLED);
+    cv::circle(*out, img_pos, circle_radius, color, thickness);
   }
   // Tagging dir
   if (valid_pos && pose.has_dir())
@@ -44,8 +44,8 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
     {
       cv::Point2f img_dir = img_end - img_pos;
       float img_length = std::sqrt(img_dir.x * img_dir.x + img_dir.y * img_dir.y);
-      cv::Point2f img_arrow_end = img_pos + arrow_length * img_dir / img_length;
-      cv::arrowedLine(*out, img_pos, img_arrow_end, color, arrow_thickness, 0, 0, arrow_tip_ratio);
+      cv::Point2f img_arrow_end = img_pos + circle_radius * img_dir / img_length;
+      cv::line(*out, img_pos, img_arrow_end, color, thickness);
     }
   }
 }
@@ -64,9 +64,7 @@ Json::Value PoseDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();
   v["circle_radius"] = circle_radius;
-  v["arrow_length"] = arrow_length;
-  v["arrow_thickness"] = arrow_thickness;
-  v["arrow_tip_ratio"] = arrow_tip_ratio;
+  v["thickness"] = thickness;
   v["color"] = hl_monitoring::toJson(color);
   return v;
 }
@@ -74,9 +72,7 @@ Json::Value PoseDrawer::toJson() const
 void PoseDrawer::fromJson(const Json::Value& v)
 {
   tryReadVal(v, "circle_radius", &circle_radius);
-  tryReadVal(v, "arrow_length", &arrow_length);
-  tryReadVal(v, "arrow_thickness", &arrow_thickness);
-  tryReadVal(v, "arrow_tip_ratio", &arrow_tip_ratio);
+  tryReadVal(v, "thickness", &thickness);
   tryReadVal(v, "color", &color);
 }
 

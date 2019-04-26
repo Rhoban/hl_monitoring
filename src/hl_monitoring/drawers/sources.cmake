@@ -5,4 +5,5 @@ set(SOURCES
   position_drawer.cpp
   pose_drawer.cpp
   team_drawer.cpp
+  text_drawer.cpp
   )

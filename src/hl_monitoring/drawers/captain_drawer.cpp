@@ -18,7 +18,6 @@ CaptainDrawer::~CaptainDrawer()
 
 void CaptainDrawer::draw(FieldToImgConverter converter, const hl_communication::Captain& captain, cv::Mat* out)
 {
-  // TODO: draw orders
   if (captain.has_ball())
   {
     ball_drawer.draw(converter, captain.ball().position(), out);
@@ -27,6 +26,7 @@ void CaptainDrawer::draw(FieldToImgConverter converter, const hl_communication::
   {
     opponent_drawer.draw(converter, opponent.pose(), out);
   }
+  // TODO: draw orders
 }
 
 Json::Value CaptainDrawer::toJson() const

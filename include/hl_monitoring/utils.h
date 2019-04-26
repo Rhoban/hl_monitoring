@@ -54,6 +54,9 @@ template <>
 void readVal<int>(const Json::Value& v, const std::string& key, int* dst);
 
 template <>
+void readVal<float>(const Json::Value& v, const std::string& key, float* dst);
+
+template <>
 void readVal<double>(const Json::Value& v, const std::string& key, double* dst);
 
 template <>

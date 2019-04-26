@@ -145,6 +145,17 @@ void readVal<int>(const Json::Value& v, const std::string& key, int* dst)
 }
 
 template <>
+void readVal<float>(const Json::Value& v, const std::string& key, float* dst)
+{
+  checkMember(v, key);
+  if (!v[key].isDouble())
+  {
+    throw std::runtime_error(HL_DEBUG + "Expecting a double for key '" + key + "'");
+  }
+  *dst = v[key].asDouble();
+}
+
+template <>
 void readVal<double>(const Json::Value& v, const std::string& key, double* dst)
 {
   checkMember(v, key);

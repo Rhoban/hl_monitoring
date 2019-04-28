@@ -11,7 +11,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-ArrowDrawer::ArrowDrawer() : color(0, 0, 0), arrow_thickness(1.0), arrow_tip_length(10)
+ArrowDrawer::ArrowDrawer() : color(0, 0, 0), arrow_thickness(2.0), arrow_tip_length(10)
 {
 }
 

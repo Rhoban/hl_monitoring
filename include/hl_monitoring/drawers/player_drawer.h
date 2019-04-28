@@ -29,6 +29,8 @@ private:
 
   ArrowDrawer target_drawer;
 
+  ArrowDrawer kick_drawer;
+
   cv::Scalar color;
 };
 

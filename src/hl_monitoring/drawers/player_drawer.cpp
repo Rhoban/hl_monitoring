@@ -37,16 +37,26 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
       name_drawer.draw(converter, {robot_pos, std::to_string(robot_id)}, out);
 
       // Drawing intention
-      // TODO: check dst
       // TODO: take into account waypoints
-      // TODO: take into account kick_target_in_field
-      // TODO: maybe move this to IntentionDrawer (Requires initial position)?
-      if (robot.has_intention() && robot.intention().has_target_pose_in_field())
+      // TODO: maybe move this to IntentionDrawer (Requires initial position of robot?)
+      if (robot.has_intention())
       {
         const Intention& intention = robot.intention();
-        const PositionDistribution& target_pos = intention.target_pose_in_field().position();
-        cv::Point3f robot_dst(target_pos.x(), target_pos.y(), 0);
-        target_drawer.draw(converter, { robot_pos, robot_dst }, out);
+        // Draw positioning target
+        if (robot.intention().has_target_pose_in_field())
+        {
+          const PositionDistribution& target_pos = intention.target_pose_in_field().position();
+          cv::Point3f robot_dst(target_pos.x(), target_pos.y(), 0);
+          target_drawer.draw(converter, { robot_pos, robot_dst }, out);
+        }
+        // Draw kick target if allowed
+        if (intention.has_kick())
+        {
+          const KickIntention& kick = intention.kick();
+          cv::Point3f kick_src_in_field = cvtToPoint3f(kick.start());
+          cv::Point3f kick_target_in_field = cvtToPoint3f(kick.target());
+          kick_drawer.draw(converter, { kick_src_in_field, kick_target_in_field }, out);
+        }
       }
     }
   }
@@ -58,6 +68,7 @@ void PlayerDrawer::setColor(const cv::Scalar& new_color)
   pose_drawer.setColor(new_color);
   name_drawer.setColor(new_color);
   target_drawer.setColor(new_color);
+  kick_drawer.setColor(new_color);
 }
 
 Json::Value PlayerDrawer::toJson() const
@@ -67,6 +78,7 @@ Json::Value PlayerDrawer::toJson() const
   v["pose_drawer"] = pose_drawer.toJson();
   v["name_drawer"] = name_drawer.toJson();
   v["target_drawer"] = target_drawer.toJson();
+  v["kick_drawer"] = kick_drawer.toJson();
   return v;
 }
 
@@ -90,6 +102,10 @@ void PlayerDrawer::fromJson(const Json::Value& v)
   if (v.isMember("target_drawer"))
   {
     target_drawer.fromJson(v["target_drawer"]);
+  }
+  if (v.isMember("kick_drawer"))
+  {
+    kick_drawer.fromJson(v["kick_drawer"]);
   }
 }
 

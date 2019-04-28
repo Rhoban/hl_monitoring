@@ -4,6 +4,8 @@
 
 #include <opencv2/calib3d.hpp>
 
+using namespace hl_communication;
+
 namespace hl_monitoring
 {
 void intrinsicToCV(const IntrinsicParameters& camera_parameters, cv::Mat* camera_matrix,
@@ -67,6 +69,22 @@ void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose)
     pose->add_rotation(rvec.at<double>(i, 0));
     pose->add_translation(tvec.at<double>(i, 0));
   }
+}
+
+cv::Point3f cvtToPoint3f(const hl_communication::PositionDistribution& position)
+{
+  return cv::Point3f(position.x(), position.y(), 0);
+}
+
+cv::Point3f fieldFromSelf(const PositionDistribution& obj_pos_in_self, const PoseDistribution& robot_pose)
+{
+  cv::Point3f pos_in_self = cvtToPoint3f(obj_pos_in_self);
+  cv::Point3f robot_pos = cvtToPoint3f(robot_pose.position());
+  double robot_dir = robot_pose.dir().mean();
+  cv::Point3f offset;
+  offset.x = pos_in_self.x * cos(robot_dir) - pos_in_self.y * sin(robot_dir);
+  offset.y = pos_in_self.x * sin(robot_dir) + pos_in_self.y * cos(robot_dir);
+  return robot_pos + offset;
 }
 
 cv::Size getImgSize(const CameraMetaInformation& camera_information)

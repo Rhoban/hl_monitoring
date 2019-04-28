@@ -1,6 +1,8 @@
 #pragma once
 
-#include "hl_monitoring/camera.pb.h"
+#include <hl_monitoring/camera.pb.h>
+
+#include <hl_communication/position.pb.h>
 
 #include <json/json.h>
 #include <opencv2/core.hpp>
@@ -18,6 +20,17 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
                    IntrinsicParameters* camera_parameters);
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec);
 void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose);
+
+/**
+ * Build a cv::Point3f at the mean of the position distribution. Z coordinate is set to 0.
+ */
+cv::Point3f cvtToPoint3f(const hl_communication::PositionDistribution& position);
+
+/**
+ * Extract the field position of an object position in the basis of a robot. Do not take into account uncertainty.
+ */
+cv::Point3f fieldFromSelf(const hl_communication::PositionDistribution& obj_pos_in_self,
+                          const hl_communication::PoseDistribution& robot_pose);
 
 cv::Size getImgSize(const CameraMetaInformation& camera_information);
 

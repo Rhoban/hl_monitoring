@@ -48,7 +48,30 @@ cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformat
  */
 bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information, cv::Point2f* img_pos);
 
+Json::Value file2Json(const std::string& path);
+
 void checkMember(const Json::Value& v, const std::string& key);
+
+template <typename T>
+Json::Value val2Json(const T& val)
+{
+  return val.toJson();
+}
+
+template <>
+Json::Value val2Json<bool>(const bool& val);
+template <>
+Json::Value val2Json<int>(const int& val);
+template <>
+Json::Value val2Json<size_t>(const size_t& val);
+template <>
+Json::Value val2Json<float>(const float& val);
+template <>
+Json::Value val2Json<double>(const double& val);
+template <>
+Json::Value val2Json<std::string>(const std::string& val);
+template <>
+Json::Value val2Json<cv::Scalar>(const cv::Scalar& color);
 
 /**
  * Place v[key] in 'dst'
@@ -58,7 +81,11 @@ void checkMember(const Json::Value& v, const std::string& key);
  * - v[key] has not the required type
  */
 template <typename T>
-void readVal(const Json::Value& v, const std::string& key, T* dst) = delete;
+void readVal(const Json::Value& v, const std::string& key, T* dst)
+{
+  checkMember(v, key);
+  dst->fromJson(v[key]);
+}
 
 template <>
 void readVal<bool>(const Json::Value& v, const std::string& key, bool* dst);
@@ -81,9 +108,6 @@ void readVal<std::string>(const Json::Value& v, const std::string& key, std::str
 template <>
 void readVal<cv::Scalar>(const Json::Value& v, const std::string& key, cv::Scalar* dst);
 
-Json::Value toJson(const cv::Scalar& color);
-
-
 /**
  * Place v[key] in 'dst', if v is not an object or if v does not contain key, do
  * not change dst and returns
@@ -99,6 +123,45 @@ void tryReadVal(const Json::Value& v, const std::string& key, T* dst)
     return;
   }
   readVal(v, key, dst);
+}
+
+template <typename T>
+std::map<uint32_t, T> readMap(const Json::Value& v, const std::string& map_key)
+{
+  checkMember(v, map_key);
+  if (!v[map_key].isObject())
+  {
+    throw std::runtime_error("readMap(): Value at '" + map_key + "' is not an object");
+  }
+  // Parse entries:
+  const Json::Value& map_v = v[map_key];
+  std::map<uint32_t, T> result;
+  for (Json::ValueConstIterator it = map_v.begin(); it != map_v.end(); it++)
+  {
+    const std::string& key = it.name();
+    readVal(map_v, key, &(result[std::stoi(key)]));
+  }
+  return result;
+}
+
+template <typename T>
+void tryReadMap(const Json::Value& v, const std::string& key, std::map<uint32_t, T>* ptr)
+{
+  if (v.isObject() && v.isMember(key))
+  {
+    *ptr = readMap<T>(v, key);
+  }
+}
+
+template <typename T>
+Json::Value map2Json(const std::map<uint32_t, T>& values)
+{
+  Json::Value v;
+  for (const auto& pair : values)
+  {
+    v[std::to_string(pair.first)] = val2Json(pair.second);
+  }
+  return v;
 }
 
 }  // namespace hl_monitoring

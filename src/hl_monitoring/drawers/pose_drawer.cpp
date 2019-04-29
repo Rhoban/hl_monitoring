@@ -65,7 +65,7 @@ Json::Value PoseDrawer::toJson() const
   Json::Value v = Drawer::toJson();
   v["circle_radius"] = circle_radius;
   v["thickness"] = thickness;
-  v["color"] = hl_monitoring::toJson(color);
+  v["color"] = val2Json(color);
   return v;
 }
 

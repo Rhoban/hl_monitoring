@@ -33,8 +33,8 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
 
       int robot_id = robot.robot_id().robot_id();
 
-      name_drawer.setImgOffset(cv::Point2f(0,30));
-      name_drawer.draw(converter, {robot_pos, std::to_string(robot_id)}, out);
+      name_drawer.setImgOffset(cv::Point2f(0, 30));
+      name_drawer.draw(converter, { robot_pos, std::to_string(robot_id) }, out);
 
       // Drawing intention
       // TODO: take into account waypoints
@@ -74,7 +74,7 @@ void PlayerDrawer::setColor(const cv::Scalar& new_color)
 Json::Value PlayerDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();
-  v["color"] = hl_monitoring::toJson(color);
+  v["color"] = val2Json(color);
   v["pose_drawer"] = pose_drawer.toJson();
   v["name_drawer"] = name_drawer.toJson();
   v["target_drawer"] = target_drawer.toJson();

@@ -34,13 +34,7 @@ MonitoringManager::~MonitoringManager()
 void MonitoringManager::loadConfig(const std::string& path)
 {
   // Reading Json file
-  std::ifstream in(path);
-  if (!in.good())
-  {
-    throw std::runtime_error(HL_DEBUG + " failed to open file '" + path + "'");
-  }
-  Json::Value root;
-  in >> root;
+  Json::Value root = file2Json(path);
   // Parsing json content
   checkMember(root, "image_providers");
   checkMember(root, "message_manager");

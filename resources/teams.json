@@ -1,0 +1,14 @@
+{
+    "teams" : {
+        "9" : {
+            "name" : "Rhoban FC",
+            "players" : {
+                "1" : "Olive",
+                "2" : "Nova",
+                "3" : "Arya",
+                "4" : "Tom",
+                "5" : "Rush"
+            }
+        }
+    }
+}

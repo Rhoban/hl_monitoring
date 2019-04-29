@@ -4,6 +4,8 @@
 
 #include <opencv2/calib3d.hpp>
 
+#include <fstream>
+
 using namespace hl_communication;
 
 namespace hl_monitoring
@@ -95,7 +97,7 @@ cv::Size getImgSize(const CameraMetaInformation& camera_information)
 
 cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec)
 {
-  cv::Mat point(3,1,CV_64F);
+  cv::Mat point(3, 1, CV_64F);
   point.at<double>(0) = pos_in_field.x;
   point.at<double>(1) = pos_in_field.y;
   point.at<double>(2) = pos_in_field.z;
@@ -129,7 +131,20 @@ bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& ca
   *img_pos = fieldToImg(pos_in_field, camera_information);
   cv::Point3f camera_point = fieldToCamera(pos_in_field, rvec, tvec);
   cv::Size img_size = getImgSize(camera_information);
-  return camera_point.z > 0 && img_pos->x >= 0 && img_pos->y >= 0 && img_pos->x < img_size.width && img_pos->y < img_size.height;
+  return camera_point.z > 0 && img_pos->x >= 0 && img_pos->y >= 0 && img_pos->x < img_size.width &&
+         img_pos->y < img_size.height;
+}
+
+Json::Value file2Json(const std::string& path)
+{
+  std::ifstream in(path);
+  if (!in.good())
+  {
+    throw std::runtime_error(HL_DEBUG + " failed to open file '" + path + "'");
+  }
+  Json::Value root;
+  in >> root;
+  return root;
 }
 
 void checkMember(const Json::Value& v, const std::string& key)
@@ -138,6 +153,53 @@ void checkMember(const Json::Value& v, const std::string& key)
   {
     throw std::runtime_error(HL_DEBUG + "Could not find member '" + key + "'");
   }
+}
+
+template <>
+Json::Value val2Json<bool>(const bool& val)
+{
+  return Json::Value(val);
+}
+
+template <>
+Json::Value val2Json<int>(const int& val)
+{
+  return Json::Value(val);
+}
+
+template <>
+Json::Value val2Json<size_t>(const size_t& val)
+{
+  return Json::Value((int)val);
+}
+
+template <>
+Json::Value val2Json<float>(const float& val)
+{
+  return Json::Value(val);
+}
+
+template <>
+Json::Value val2Json<double>(const double& val)
+{
+  return Json::Value(val);
+}
+
+template <>
+Json::Value val2Json<std::string>(const std::string& val)
+{
+  return Json::Value(val);
+}
+
+template <>
+Json::Value val2Json<cv::Scalar>(const cv::Scalar& color)
+{
+  Json::Value v;
+  for (int i = 0; i < 3; i++)
+  {
+    v[i] = color[i];
+  }
+  return v;
 }
 
 template <>
@@ -207,7 +269,7 @@ void readVal<cv::Scalar>(const Json::Value& v, const std::string& key, cv::Scala
   {
     throw std::runtime_error(HL_DEBUG + "Invalid size for array at '" + key + "', expecting 3");
   }
-  for (Json::ArrayIndex idx=0; idx<3; idx++)
+  for (Json::ArrayIndex idx = 0; idx < 3; idx++)
   {
     if (!v[key][idx].isInt())
     {
@@ -216,19 +278,11 @@ void readVal<cv::Scalar>(const Json::Value& v, const std::string& key, cv::Scala
     int val = v[key][idx].asInt();
     if (val < 0 || val > 255)
     {
-      throw std::runtime_error(HL_DEBUG + "Invalide value for " + key + "[" + std::to_string(idx) + "]: range is [0,255]");
+      throw std::runtime_error(HL_DEBUG + "Invalide value for " + key + "[" + std::to_string(idx) +
+                               "]: range is [0,255]");
     }
     (*dst)[idx] = (char)val;
   }
-}
-
-Json::Value toJson(const cv::Scalar& color)
-{
-  Json::Value v;
-  for (int i=0; i<3; i++){
-    v[i] = color[i];
-  }
-  return v;
 }
 
 }  // namespace hl_monitoring

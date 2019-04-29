@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-TextDrawer::TextDrawer() : img_offset(0,0), font_scale(1.0), font_thickness(3.0), color(0,0,0)
+TextDrawer::TextDrawer() : img_offset(0, 0), font_scale(1.0), font_thickness(3.0), color(0, 0, 0)
 {
 }
 
@@ -17,7 +17,7 @@ TextDrawer::~TextDrawer()
 {
 }
 
-void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f,std::string>& data, cv::Mat* out)
+void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f, std::string>& data, cv::Mat* out)
 {
   cv::Point3f field_pos = data.first;
   const std::string& msg = data.second;
@@ -51,7 +51,7 @@ Json::Value TextDrawer::toJson() const
   v["img_offset_y"] = img_offset.y;
   v["font_scale"] = font_scale;
   v["font_thickness"] = font_thickness;
-  v["color"] = hl_monitoring::toJson(color);
+  v["color"] = val2Json(color);
   return v;
 }
 

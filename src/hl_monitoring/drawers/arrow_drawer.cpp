@@ -19,7 +19,7 @@ ArrowDrawer::~ArrowDrawer()
 {
 }
 
-void ArrowDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f,cv::Point3f>& segment, cv::Mat* out)
+void ArrowDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f, cv::Point3f>& segment, cv::Mat* out)
 {
   cv::Point2f img_src, img_end;
   bool valid_src = converter(segment.first, &img_src);
@@ -43,7 +43,7 @@ Json::Value ArrowDrawer::toJson() const
   Json::Value v = Drawer::toJson();
   v["arrow_thickness"] = arrow_thickness;
   v["arrow_tip_length"] = arrow_tip_length;
-  v["color"] = hl_monitoring::toJson(color);
+  v["color"] = val2Json(color);
   return v;
 }
 

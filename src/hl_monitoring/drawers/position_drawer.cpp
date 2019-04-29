@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PositionDrawer::PositionDrawer() : circle_radius(5.0), color(0,0,0)
+PositionDrawer::PositionDrawer() : circle_radius(5.0), color(0, 0, 0)
 {
 }
 
@@ -42,7 +42,7 @@ Json::Value PositionDrawer::toJson() const
 {
   Json::Value v = Drawer::toJson();
   v["circle_radius"] = circle_radius;
-  v["color"] = hl_monitoring::toJson(color);
+  v["color"] = val2Json(color);
   return v;
 }
 

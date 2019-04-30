@@ -79,6 +79,7 @@ void MonitoringManager::dumpReplayConfig()
 
   Json::Value v;
   v["live"] = false;
+  v["image_providers"] = Json::Value(Json::ValueType::objectValue);
   for (const auto& entry : image_providers)
   {
     v["image_providers"][entry.first]["class_name"] = "ReplayImageProvider";

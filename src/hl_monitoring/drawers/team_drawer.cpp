@@ -24,6 +24,10 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
   for (const auto& entry : status.getRobotsByTeam())
   {
     uint32_t team_id = entry.first;
+    if (team_focus >= 0 && (int)team_id != team_focus)
+    {
+      continue;
+    }
     cv::Scalar color(0,0,0);// Default color for team is black
     if (color_by_team_id.count(team_id))
     {
@@ -34,6 +38,10 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
     for (const RobotMsg& msg : entry.second)
     {
       uint32_t robot_id = msg.robot_id().robot_id();
+      if (player_focus >= 0 && (int)robot_id != player_focus)
+      {
+        continue;
+      }
       if (!isPenalized(status.gc_message, team_id, robot_id))
       {
         player_drawer.draw(converter, msg, out);
@@ -81,6 +89,16 @@ void TeamDrawer::updateColorsById(const GCMsg& gc_msg)
       color_by_team_id[team_number] = team_colors[team_color];
     }
   }
+}
+
+void TeamDrawer::setTeamFocus(int new_team_focus)
+{
+  team_focus = new_team_focus;
+}
+
+void TeamDrawer::setPlayerFocus(int new_player_focus)
+{
+  player_focus = new_player_focus;
 }
 
 }  // namespace hl_monitoring

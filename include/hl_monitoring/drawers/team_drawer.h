@@ -15,6 +15,12 @@ public:
   Json::Value toJson() const override;
   void fromJson(const Json::Value& v) override;
 
+  void setTeamFocus(int new_team_focus);
+  /**
+   * Player is numbered from 1
+   */
+  void setPlayerFocus(int new_player_focus);
+
 private:
   /**
    * Drawer used to tag players
@@ -25,6 +31,16 @@ private:
    * Drawer used for captain information
    */
   CaptainDrawer captain_drawer;
+
+  /**
+   * If negative, no focus, if positive, only team with id 'team_focus' is drawn
+   */
+  int team_focus;
+
+  /**
+   * If negative, no focus, if positive, only player with id 'player_focus' is drawn
+   */
+  int player_focus;
 
   std::map<uint32_t,cv::Scalar> color_by_team_id;
 

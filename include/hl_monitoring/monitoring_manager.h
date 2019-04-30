@@ -1,6 +1,8 @@
 #pragma once
 
+#include <hl_monitoring/field.h>
 #include <hl_monitoring/image_provider.h>
+#include <hl_monitoring/team_manager.h>
 #include <hl_communication/message_manager.h>
 
 #include <json/json.h>
@@ -23,9 +25,13 @@ public:
   ~MonitoringManager();
 
   void loadConfig(const std::string& path);
+  /**
+   * Creates the appropriate output directory if live mode is enabled.
+   */
+  void setupOutput();
+  void dumpReplayConfig();
 
-  std::unique_ptr<ImageProvider> buildImageProvider(const Json::Value& v);
-
+  std::unique_ptr<ImageProvider> buildImageProvider(const Json::Value& v, const std::string& name);
   void loadImageProviders(const Json::Value& v);
   void loadMessageManager(const Json::Value& v);
 
@@ -68,6 +74,9 @@ public:
    */
   int64_t getOffset() const;
 
+  const Field& getField() const;
+  const TeamManager& getTeamManager() const;
+
 private:
   /**
    * Access to message from both, robots and GameController
@@ -80,15 +89,25 @@ private:
   std::map<std::string, std::unique_ptr<ImageProvider>> image_providers;
 
   /**
-   * Path to the output file where all the received messages will be stored upon deletion
-   * - If empty, messages are not saved
+   * Dimensions of the field
    */
-  std::string msg_collection_path;
+  Field field;
+
+  /**
+   * Access to team names and field names
+   */
+  TeamManager team_manager;
 
   /**
    * Is the monitoring session live or not?
    */
   bool live;
+
+  /**
+   * The path of the directory to which datas will be exported (ending by a /).
+   * if empty, then nothing is saved
+   */
+  std::string output_prefix;
 };
 
 }  // namespace hl_monitoring

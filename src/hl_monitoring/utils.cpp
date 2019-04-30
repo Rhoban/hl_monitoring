@@ -4,12 +4,28 @@
 
 #include <opencv2/calib3d.hpp>
 
+#include <chrono>
 #include <fstream>
 
 using namespace hl_communication;
 
+using std::chrono::system_clock;
+
 namespace hl_monitoring
 {
+
+std::string getFormattedTime()
+{
+  system_clock::time_point now = system_clock::now();
+  time_t tt = system_clock::to_time_t(now);
+  struct tm tm;
+  localtime_r(&tt, &tm);
+  char buffer[80];  // Buffer is big enough
+  sprintf(buffer, "%04d_%02d_%02d_%02dh%02dm%02ds", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min,
+          tm.tm_sec);
+  return std::string(buffer);
+}
+
 void intrinsicToCV(const IntrinsicParameters& camera_parameters, cv::Mat* camera_matrix,
                    cv::Mat* distortion_coefficients, cv::Size* img_size)
 {
@@ -145,6 +161,25 @@ Json::Value file2Json(const std::string& path)
   Json::Value root;
   in >> root;
   return root;
+}
+
+void writeJson(const Json::Value & v, const std::string & path, bool human)
+{
+  std::string content = json2String(v, human);
+  std::ofstream output(path);
+  if (!output.good()) {
+    throw std::runtime_error(HL_DEBUG + "failed to open file at '" + path + "'");
+  }
+  output << content;
+}
+
+std::string json2String(const Json::Value& v, bool human)
+{
+  if (human)
+  {
+    return Json::StyledWriter().write(v);
+  }
+  return Json::FastWriter().write(v);
 }
 
 void checkMember(const Json::Value& v, const std::string& key)

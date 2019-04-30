@@ -14,6 +14,13 @@
 
 namespace hl_monitoring
 {
+/**
+ * Uses system_clock to extract a formatted time: format is:
+ * - YYYY_MM_DD_HHhMMmSSs Ex: 2018_09_25_17h23m12s
+ * Function is reentrant
+ */
+std::string getFormattedTime();
+
 void intrinsicToCV(const IntrinsicParameters& camera_parameters, cv::Mat* camera_matrix,
                    cv::Mat* distortion_coefficients, cv::Size* img_size);
 void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& img_size,
@@ -49,6 +56,16 @@ cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformat
 bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information, cv::Point2f* img_pos);
 
 Json::Value file2Json(const std::string& path);
+
+/**
+ * If human is enabled, then indent the string and uses end of line
+ */
+std::string json2String(const Json::Value& v, bool human = true);
+
+/**
+ * @see json2String
+ */
+void writeJson(const Json::Value & v, const std::string & path, bool human = true);
 
 void checkMember(const Json::Value& v, const std::string& key);
 

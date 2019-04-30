@@ -291,7 +291,7 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
 }
 
 void Field::tagLines(const CameraMetaInformation& camera_information, cv::Mat* tag_img, const cv::Scalar& line_color,
-                     double line_thickness, int nb_segments)
+                     double line_thickness, int nb_segments) const
 {
   if (!camera_information.has_camera_parameters() || !camera_information.has_pose())
   {
@@ -312,7 +312,7 @@ void Field::tagLines(const CameraMetaInformation& camera_information, cv::Mat* t
 
 void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
                      const cv::Mat& tvec, cv::Mat* tag_img, const cv::Scalar& line_color, double line_thickness,
-                     int nb_segments)
+                     int nb_segments) const
 {
   for (const auto& segment : getWhiteLines())
   {

@@ -7,6 +7,9 @@
 
 #include <fstream>
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 #ifdef HL_MONITORING_USES_FLYCAPTURE
 #include <hl_monitoring/flycap_image_provider.h>
 #endif
@@ -21,9 +24,9 @@ MonitoringManager::MonitoringManager()
 
 MonitoringManager::~MonitoringManager()
 {
-  if (msg_collection_path != "")
+  if (output_prefix != "")
   {
-    message_manager->saveMessages(msg_collection_path);
+    message_manager->saveMessages(output_prefix + "messages.bin");
   }
   for (auto& entry : image_providers)
   {
@@ -36,15 +39,59 @@ void MonitoringManager::loadConfig(const std::string& path)
   // Reading Json file
   Json::Value root = file2Json(path);
   // Parsing json content
+  readVal(root, "live", &live);
+  tryReadVal(root, "output_prefix", &output_prefix);
+  setupOutput();
   checkMember(root, "image_providers");
   checkMember(root, "message_manager");
+  checkMember(root, "field");
+  checkMember(root, "team_manager");
+  field.fromJson(root["field"]);
+  team_manager.fromJson(root["team_manager"]);
   loadImageProviders(root["image_providers"]);
   loadMessageManager(root["message_manager"]);
-  readVal(root, "live", &live);
-  tryReadVal(root, "msg_collection_path", &msg_collection_path);
+  dumpReplayConfig();
 }
 
-std::unique_ptr<ImageProvider> MonitoringManager::buildImageProvider(const Json::Value& v)
+void MonitoringManager::setupOutput()
+{
+  if (live)
+  {
+    // If user forgot to add a '/' at the end of the file, add it automatically
+    if (output_prefix != "" && output_prefix[output_prefix.size() - 1] != '/')
+    {
+      output_prefix += "/";
+    }
+    output_prefix += getFormattedTime() + "/";
+
+    if (mkdir(output_prefix.c_str(), 0755))
+    {
+      throw std::runtime_error(HL_DEBUG + "Failed to create directory at '" + output_prefix + "'");
+    }
+  }
+}
+
+void MonitoringManager::dumpReplayConfig()
+{
+  // Only dump if config is live
+  if (!live)
+    return;
+
+  Json::Value v;
+  v["live"] = false;
+  for (const auto& entry : image_providers)
+  {
+    v["image_providers"][entry.first]["class_name"] = "ReplayImageProvider";
+    v["image_providers"][entry.first]["input_path"] = entry.first + ".avi";
+    v["image_providers"][entry.first]["meta_information_path"] = entry.first + ".bin";
+  }
+  v["message_manager"]["file_path"] = "messages.bin";
+  v["field"] = field.toJson();
+  v["team_manager"] = team_manager.toJson();
+  writeJson(v, output_prefix + "replay.json", true);
+}
+
+std::unique_ptr<ImageProvider> MonitoringManager::buildImageProvider(const Json::Value& v, const std::string& name)
 {
   checkMember(v, "class_name");
   std::unique_ptr<ImageProvider> result;
@@ -52,19 +99,12 @@ std::unique_ptr<ImageProvider> MonitoringManager::buildImageProvider(const Json:
   readVal(v, "class_name", &class_name);
   tryReadVal(v, "intrinsic_path", &intrinsic_path);
   tryReadVal(v, "default_pose_path", &default_pose_path);
+  std::string image_provider_prefix = output_prefix + name;
   if (class_name == "OpenCVImageProvider")
   {
     checkMember(v, "input_path");
     readVal(v, "input_path", &input_path);
-    std::string output_prefix;
-    if (v.isMember("output_prefix"))
-    {
-      result.reset(new OpenCVImageProvider(input_path, v["output_prefix"].asString()));
-    }
-    else
-    {
-      result.reset(new OpenCVImageProvider(input_path));
-    }
+    result.reset(new OpenCVImageProvider(input_path, image_provider_prefix));
   }
   else if (class_name == "ReplayImageProvider")
   {
@@ -85,15 +125,7 @@ std::unique_ptr<ImageProvider> MonitoringManager::buildImageProvider(const Json:
   {
     checkMember(v, "parameters");
     const Json::Value& parameters = v["parameters"];
-    std::string output_prefix;
-    if (v.isMember("output_prefix"))
-    {
-      result.reset(new FlyCapImageProvider(parameters, v["output_prefix"].asString()));
-    }
-    else
-    {
-      result.reset(new FlyCapImageProvider(parameters));
-    }
+    result.reset(new FlyCapImageProvider(parameters, image_provider_prefix));
   }
 #endif
   else
@@ -124,7 +156,7 @@ void MonitoringManager::loadImageProviders(const Json::Value& v)
   for (Json::ValueConstIterator it = v.begin(); it != v.end(); it++)
   {
     const std::string& key = it.name();
-    addImageProvider(key, buildImageProvider(v[key]));
+    addImageProvider(key, buildImageProvider(v[key], key));
   }
 }
 
@@ -307,6 +339,16 @@ int64 MonitoringManager::getOffset() const
   // TODO: add a mechanism to watch potential overflows on sum_offset;
   int64_t mean_offset = sum_offset / nb_offsets;
   return mean_offset;
+}
+
+const Field& MonitoringManager::getField() const
+{
+  return field;
+}
+
+const TeamManager& MonitoringManager::getTeamManager() const
+{
+  return team_manager;
 }
 
 }  // namespace hl_monitoring

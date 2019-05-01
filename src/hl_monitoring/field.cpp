@@ -11,6 +11,30 @@
 
 namespace hl_monitoring
 {
+static std::vector<Field::POIType> poi_types_values = { Field::POIType::ArenaCorner, Field::POIType::LineCorner,
+                                                        Field::POIType::T,           Field::POIType::X,
+                                                        Field::POIType::Center,      Field::POIType::PenaltyMark,
+                                                        Field::POIType::PostBase,    Field::POIType::Unknown };
+
+hl_monitoring::Field::POIType Field::string2POIType(const std::string& str)
+{
+  static std::map<std::string,POIType> types_by_str;
+  if (types_by_str.size() == 0)
+  {
+    for (Field::POIType type : poi_types_values)
+    {
+      types_by_str[poiType2String(type)] = type;
+    }
+  }
+  try {
+    types_by_str.at(str);
+  }
+  catch (const std::out_of_range& exc)
+  {
+    throw std::out_of_range(HL_DEBUG + " cannont convert str'" + str + "' to poi type");
+  }
+}
+
 std::string Field::poiType2String(hl_monitoring::Field::POIType type)
 {
   switch (type)
@@ -148,7 +172,7 @@ const std::vector<cv::Point3f>& Field::getPenaltyMarks() const
   return penalty_marks;
 }
 
-const std::map<Field::POIType, std::vector<cv::Point3f>>& Field::getPointsOfInterestByType() const
+const Field::POICollection& Field::getPointsOfInterestByType() const
 {
   return poi_by_type;
 }

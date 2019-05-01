@@ -59,8 +59,13 @@ public:
     PostBase,
     Unknown
   };
+  /**
+   * Map of points of interests ordered by Type
+   */
+  typedef std::map<POIType, std::vector<cv::Point3f>> POICollection;
 
-  static std::string poiType2String(hl_monitoring::Field::POIType type);
+  static Field::POIType string2POIType(const std::string& str);
+  static std::string poiType2String(Field::POIType type);
 
   Field();
 
@@ -85,7 +90,7 @@ public:
   const std::vector<cv::Point3f>& getGoalPosts() const;
   const std::vector<cv::Point3f>& getPenaltyMarks() const;
 
-  const std::map<POIType, std::vector<cv::Point3f>>& getPointsOfInterestByType() const;
+  const POICollection& getPointsOfInterestByType() const;
 
   void tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
                            const cv::Mat& tvec, cv::Mat* tag_img);
@@ -204,7 +209,7 @@ private:
   /**
    * Stores points of interest positions by type of feature
    */
-  std::map<POIType, std::vector<cv::Point3f>> poi_by_type;
+  POICollection poi_by_type;
 
   /**
    * List all the white segments in the field

@@ -66,6 +66,7 @@ public:
 
   static Field::POIType string2POIType(const std::string& str);
   static std::string poiType2String(Field::POIType type);
+  static const std::vector<Field::POIType>& getPOITypeValues();
 
   Field();
 
@@ -221,6 +222,8 @@ private:
 
   std::vector<cv::Point3f> goal_posts;
   std::vector<cv::Point3f> penalty_marks;
+
+  static std::vector<Field::POIType> poi_type_values;
 };
 
 }  // namespace hl_monitoring

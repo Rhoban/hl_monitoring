@@ -11,23 +11,23 @@
 
 namespace hl_monitoring
 {
-static std::vector<Field::POIType> poi_types_values = { Field::POIType::ArenaCorner, Field::POIType::LineCorner,
-                                                        Field::POIType::T,           Field::POIType::X,
-                                                        Field::POIType::Center,      Field::POIType::PenaltyMark,
-                                                        Field::POIType::PostBase,    Field::POIType::Unknown };
+std::vector<Field::POIType> Field::poi_type_values = { Field::POIType::ArenaCorner, Field::POIType::LineCorner,
+                                                       Field::POIType::T,           Field::POIType::X,
+                                                       Field::POIType::Center,      Field::POIType::PenaltyMark,
+                                                       Field::POIType::PostBase,    Field::POIType::Unknown };
 
 hl_monitoring::Field::POIType Field::string2POIType(const std::string& str)
 {
   static std::map<std::string,POIType> types_by_str;
   if (types_by_str.size() == 0)
   {
-    for (Field::POIType type : poi_types_values)
+    for (Field::POIType type : poi_type_values)
     {
       types_by_str[poiType2String(type)] = type;
     }
   }
   try {
-    types_by_str.at(str);
+    return types_by_str.at(str);
   }
   catch (const std::out_of_range& exc)
   {
@@ -56,6 +56,11 @@ std::string Field::poiType2String(hl_monitoring::Field::POIType type)
     default:
       return "UNKOWN";
   }
+}
+
+const std::vector<Field::POIType>& Field::getPOITypeValues()
+{
+  return poi_type_values;
 }
 
 Field::Field()

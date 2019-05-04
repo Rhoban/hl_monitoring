@@ -10,8 +10,8 @@ TopViewDrawer::TopViewDrawer() : TopViewDrawer(cv::Size(600, 400))
 TopViewDrawer::TopViewDrawer(const cv::Size& img_size)
   : img_size(img_size)
   , background_color(0, 0, 0)
-  , field_color(0, 180, 0)
-  , lines_color(255, 255, 255)
+  , field_color(0, 80, 0)
+  , lines_color(180, 180, 180)
   , goals_color(0, 0, 255)
 {
 }

@@ -304,6 +304,7 @@ void Field::updatePointsOfInterestByType()
 void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
                                 const cv::Mat& tvec, cv::Mat* tag_img)
 {
+  cv::Rect2f img_rect(cv::Point2f(), cv::Point2f(tag_img->cols, tag_img->rows));
   for (const auto& entry : poi_by_type)
   {
     const std::vector<cv::Point3f>& field_positions = entry.second;
@@ -312,7 +313,8 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
     for (size_t idx=0; idx < field_positions.size();idx++)
     {
       cv::Point3f camera_pos = hl_monitoring::fieldToCamera(field_positions[idx], rvec, tvec);
-      if (camera_pos.z > 0) {
+      if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))
+      {
         cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
       }
     }
@@ -366,7 +368,7 @@ void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coe
       std::vector<cv::Point2f> img_points;
       cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
       // When point is outside of image, screw up the drawing
-      cv::Rect img_rect(cv::Point(), tag_img->size());
+      cv::Rect2f img_rect(cv::Point(), tag_img->size());
       if (img_rect.contains(img_points[0]) && img_rect.contains(img_points[1]))
       {
         cv::line(*tag_img, img_points[0], img_points[1], line_color, line_thickness);

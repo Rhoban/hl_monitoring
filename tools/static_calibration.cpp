@@ -9,6 +9,7 @@
 
 #include <hl_communication/utils.h>
 #include <hl_monitoring/field.h>
+#include <hl_monitoring/manual_pose_solver.h>
 #include <hl_monitoring/replay_image_provider.h>
 #include <hl_monitoring/utils.h>
 
@@ -219,14 +220,38 @@ int main(int argc, char** argv)
   }
   intrinsic.ParseFromIstream(&in);
 
-  std::unique_ptr<Field> field(new Field());
-  field->loadFile(field_arg.getValue());
+  Field field;
+  field.loadFile(field_arg.getValue());
 
-  StaticCalibrationTool calib_tool(std::move(provider), std::move(field), intrinsic);
-
-  while (calib_tool.isGood())
+  Pose3D pose;
+  bool has_calib = false;
+  bool exit = false;
+  while (!exit)
   {
-    calib_tool.update();
+    cv::Mat img = provider->getNextImg();
+    cv::Mat display_img = img.clone();
+    if (has_calib)
+    {
+      CameraMetaInformation information;
+      information.mutable_camera_parameters()->CopyFrom(intrinsic);
+      information.mutable_pose()->CopyFrom(pose);
+      field.tagLines(information, &display_img, cv::Scalar(0, 0, 0), 2);
+    }
+    cv::imshow("display", display_img);
+    char key = cv::waitKey(20);
+    switch (key)
+    {
+      case 'q':
+        exit = true;
+        break;
+      case 'c':
+        ManualPoseSolver pose_solver(img, intrinsic, field);
+        has_calib = pose_solver.solve(&pose);
+        break;
+    }
   }
-  calib_tool.savePose(output_arg.getValue());
+  if (has_calib)
+  {
+    hl_communication::writeToFile(output_arg.getValue(), pose);
+  }
 }

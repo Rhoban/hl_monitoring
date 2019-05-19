@@ -37,11 +37,13 @@ message IntrinsicParameters {
 
 message Pose3D {
   /**
+   * The rotation which transforms from field referential to camera referential
    * Size 3: Rotation vector (based on Rodrigues rotation)
+   * Size 4: Quaternion (qw, qx, qy, qz)
    */ 
   repeated float rotation = 1;
   /**
-   * [tx,ty,tz]
+   * Position of the field center in the camera referential [tx,ty,tz]
    */
   repeated float translation = 2;
 }

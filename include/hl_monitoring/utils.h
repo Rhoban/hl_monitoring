@@ -28,6 +28,8 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec);
 void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose);
 
+std::ostream& operator<<(std::ostream& out, const Pose3D& pose);
+
 /**
  * Build a cv::Point3f at the mean of the position distribution. Z coordinate is set to 0.
  */
@@ -65,7 +67,7 @@ std::string json2String(const Json::Value& v, bool human = true);
 /**
  * @see json2String
  */
-void writeJson(const Json::Value & v, const std::string & path, bool human = true);
+void writeJson(const Json::Value& v, const std::string& path, bool human = true);
 
 void checkMember(const Json::Value& v, const std::string& key);
 

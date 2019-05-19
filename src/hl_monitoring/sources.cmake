@@ -3,6 +3,7 @@ set(SOURCES
   field.cpp
   top_view_drawer.cpp
   image_provider.cpp
+  manual_pose_solver.cpp
   monitoring_manager.cpp
   opencv_image_provider.cpp
   replay_image_provider.cpp

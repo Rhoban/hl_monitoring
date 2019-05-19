@@ -13,7 +13,6 @@ using std::chrono::system_clock;
 
 namespace hl_monitoring
 {
-
 std::string getFormattedTime()
 {
   system_clock::time_point now = system_clock::now();
@@ -60,22 +59,55 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
   }
 }
 
+cv::Mat rodriguesFromQuaternion(double qw, double qx, double qy, double qz)
+{
+  // From: http://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToAngle/
+  cv::Mat res(3, 1, CV_64F);
+  double angle = 2 * acos(qw);
+  double s = std::sqrt(1 - qw * qw);
+  if (s > std::pow(10, -9))
+  {
+    qx /= s;
+    qy /= s;
+    qz /= s;
+  }
+  res.at<double>(0, 0) = qx * angle;
+  res.at<double>(1, 0) = qy * angle;
+  res.at<double>(2, 0) = qz * angle;
+  return res;
+}
+
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec)
 {
-  if (pose.rotation_size() != 3)
+  // Read rotation
+  if (pose.rotation_size() == 3)
   {
-    throw std::runtime_error("Only Rodrigues rotation vector is supported currently");
+    *rvec = cv::Mat(3, 1, CV_64F);
+    for (int i = 0; i < 3; i++)
+    {
+      rvec->at<double>(i, 0) = pose.rotation(i);
+    }
   }
-  if (pose.translation_size() != 3)
+  else if (pose.rotation_size() == 4)
+  {
+    *rvec = rodriguesFromQuaternion(pose.rotation(0), pose.rotation(1), pose.rotation(2), pose.rotation(3));
+  }
+  else
+  {
+    throw std::runtime_error("Only Rodrigues rotation vector and quaternions are supported currently");
+  }
+  // Read translation
+  if (pose.translation_size() == 3)
+  {
+    *tvec = cv::Mat(3, 1, CV_64F);
+    for (int i = 0; i < 3; i++)
+    {
+      tvec->at<double>(i, 0) = pose.translation(i);
+    }
+  }
+  else
   {
     throw std::runtime_error("Size of translation in Pose3D is not valid (only 3 is accepted)");
-  }
-  *rvec = cv::Mat(3, 1, CV_64F);
-  *tvec = cv::Mat(3, 1, CV_64F);
-  for (int i = 0; i < 3; i++)
-  {
-    rvec->at<double>(i, 0) = pose.rotation(i);
-    tvec->at<double>(i, 0) = pose.translation(i);
   }
 }
 
@@ -87,6 +119,13 @@ void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose)
     pose->add_rotation(rvec.at<double>(i, 0));
     pose->add_translation(tvec.at<double>(i, 0));
   }
+}
+
+std::ostream& operator<<(std::ostream& out, const Pose3D& pose)
+{
+  cv::Mat rvec, tvec;
+  pose3DToCV(pose, &rvec, &tvec);
+  return out << "tvec: " << tvec << " rvec: " << rvec;
 }
 
 cv::Point3f cvtToPoint3f(const hl_communication::PositionDistribution& position)
@@ -163,11 +202,12 @@ Json::Value file2Json(const std::string& path)
   return root;
 }
 
-void writeJson(const Json::Value & v, const std::string & path, bool human)
+void writeJson(const Json::Value& v, const std::string& path, bool human)
 {
   std::string content = json2String(v, human);
   std::ofstream output(path);
-  if (!output.good()) {
+  if (!output.good())
+  {
     throw std::runtime_error(HL_DEBUG + "failed to open file at '" + path + "'");
   }
   output << content;

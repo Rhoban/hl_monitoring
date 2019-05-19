@@ -8,6 +8,7 @@
 #include <opencv2/imgproc.hpp>
 
 #include <fstream>
+#include <iostream>
 
 namespace hl_monitoring
 {
@@ -18,7 +19,7 @@ std::vector<Field::POIType> Field::poi_type_values = { Field::POIType::ArenaCorn
 
 hl_monitoring::Field::POIType Field::string2POIType(const std::string& str)
 {
-  static std::map<std::string,POIType> types_by_str;
+  static std::map<std::string, POIType> types_by_str;
   if (types_by_str.size() == 0)
   {
     for (Field::POIType type : poi_type_values)
@@ -26,7 +27,8 @@ hl_monitoring::Field::POIType Field::string2POIType(const std::string& str)
       types_by_str[poiType2String(type)] = type;
     }
   }
-  try {
+  try
+  {
     return types_by_str.at(str);
   }
   catch (const std::out_of_range& exc)
@@ -254,8 +256,7 @@ void Field::updateGoals()
 {
   goals = { { getPoint("post_base++"), getPoint("post_base+-") },
             { getPoint("post_base-+"), getPoint("post_base--") } };
-  goal_posts = { getPoint("post_base++"), getPoint("post_base+-"), getPoint("post_base-+"),
-                 getPoint("post_base--") };
+  goal_posts = { getPoint("post_base++"), getPoint("post_base+-"), getPoint("post_base-+"), getPoint("post_base--") };
 }
 
 void Field::updatePenaltyMarks()
@@ -310,7 +311,7 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
     const std::vector<cv::Point3f>& field_positions = entry.second;
     std::vector<cv::Point2f> img_points;
     cv::projectPoints(field_positions, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
-    for (size_t idx=0; idx < field_positions.size();idx++)
+    for (size_t idx = 0; idx < field_positions.size(); idx++)
     {
       cv::Point3f camera_pos = hl_monitoring::fieldToCamera(field_positions[idx], rvec, tvec);
       if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))

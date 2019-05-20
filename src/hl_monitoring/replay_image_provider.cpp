@@ -53,7 +53,7 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
     {
       throw std::runtime_error(HL_DEBUG + "Duplicated time_stamp " + std::to_string(time_stamp));
     }
-    indices_by_time_stamp[time_stamp] = idx;
+    pushTimeStamp(idx, time_stamp);
   }
 }
 
@@ -70,7 +70,7 @@ CalibratedImage ReplayImageProvider::getCalibratedImage(uint64_t time_stamp)
   {
     return CalibratedImage();
   }
-  else if (new_index == index - 1) // Asking for previous image again
+  else if (new_index == index - 1)  // Asking for previous image again
   {
     img = last_img;
   }
@@ -83,23 +83,7 @@ CalibratedImage ReplayImageProvider::getCalibratedImage(uint64_t time_stamp)
     img = getNextImg();
   }
 
-  CameraMetaInformation camera_meta;
-  if (meta_information.has_camera_parameters())
-  {
-    camera_meta.mutable_camera_parameters()->CopyFrom(meta_information.camera_parameters());
-  }
-
-  const FrameEntry& frame = meta_information.frames(index);
-  if (frame.has_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(frame.pose());
-  }
-  else if (meta_information.has_default_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(meta_information.default_pose());
-  }
-
-  return CalibratedImage(img, camera_meta);
+  return CalibratedImage(img, getCameraMetaInformation(index));
 }
 
 cv::Mat ReplayImageProvider::getNextImg()

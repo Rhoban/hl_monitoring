@@ -82,28 +82,12 @@ CalibratedImage OpenCVImageProvider::getCalibratedImage(uint64_t time_stamp)
   uint64_t last_frame = indices_by_time_stamp.rbegin()->first;
   if (time_stamp < last_frame)
   {
-    throw std::runtime_error(HL_DEBUG + " asking for frames in the past is not supported (current_index:) " + std::to_string(last_frame));
+    throw std::runtime_error(HL_DEBUG + " asking for frames in the past is not supported (current_index:) " +
+                             std::to_string(last_frame));
   }
 
   int index = indices_by_time_stamp.size() - 1;
-
-  CameraMetaInformation camera_meta;
-  if (meta_information.has_camera_parameters())
-  {
-    camera_meta.mutable_camera_parameters()->CopyFrom(meta_information.camera_parameters());
-  }
-
-  const FrameEntry& frame = meta_information.frames(index);
-  if (frame.has_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(frame.pose());
-  }
-  else if (meta_information.has_default_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(meta_information.default_pose());
-  }
-
-  return CalibratedImage(img, camera_meta);
+  return CalibratedImage(img, getCameraMetaInformation(index));
 }
 
 void OpenCVImageProvider::update()
@@ -124,7 +108,7 @@ cv::Mat OpenCVImageProvider::getNextImg()
                              std::to_string(nb_frames));
   }
   // register image
-  indices_by_time_stamp[time_stamp] = index;
+  pushTimeStamp(index, time_stamp);
   FrameEntry* entry = meta_information.add_frames();
   entry->set_time_stamp(time_stamp);
   index++;

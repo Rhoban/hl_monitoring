@@ -149,24 +149,7 @@ CalibratedImage FlyCapImageProvider::getCalibratedImage(uint64_t time_stamp)
   }
 
   int index = indices_by_time_stamp.size() - 1;
-
-  CameraMetaInformation camera_meta;
-  if (meta_information.has_camera_parameters())
-  {
-    camera_meta.mutable_camera_parameters()->CopyFrom(meta_information.camera_parameters());
-  }
-
-  const FrameEntry& frame = meta_information.frames(index);
-  if (frame.has_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(frame.pose());
-  }
-  else if (meta_information.has_default_pose())
-  {
-    camera_meta.mutable_pose()->CopyFrom(meta_information.default_pose());
-  }
-
-  return CalibratedImage(img, camera_meta);
+  return CalibratedImage(img, getCameraMetaInformation(index));
 }
 
 void FlyCapImageProvider::update()
@@ -208,7 +191,7 @@ cv::Mat FlyCapImageProvider::getNextImg()
   }
   cv::cvtColor(tmp_img, img, cv::COLOR_RGB2BGR);
   // register image
-  indices_by_time_stamp[time_stamp] = index;
+  pushTimeStamp(index, time_stamp);
   FrameEntry* entry = meta_information.add_frames();
   entry->set_time_stamp(time_stamp);
   index++;

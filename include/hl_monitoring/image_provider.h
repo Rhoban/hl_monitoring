@@ -76,7 +76,33 @@ public:
    */
   int64_t getOffset() const;
 
+  const VideoMetaInformation& getMetaInformation() const;
+
+  /**
+   * Return timestamp of current image (steady clock)
+   */
+  int64_t getTimeStamp() const;
+
+  /**
+   * Return timestamp at given image index (steady_clock
+   */
+  int64_t getTimeStamp(int idx) const;
+
+  /**
+   * Retrieve the meta information corresponding to current img
+   */
+  CameraMetaInformation getCameraMetaInformation() const;
+  /**
+   * Retrieve the meta information corresponding to the given img index
+   */
+  CameraMetaInformation getCameraMetaInformation(int index) const;
+
 protected:
+  /**
+   * Push a new entry, updating both indices_by_time_stamp and time_stamp_by_index
+   */
+  void pushTimeStamp(int index, uint64_t time_stamp);
+
   /**
    * Information relevant to the video stream
    */
@@ -86,6 +112,11 @@ protected:
    * Provide access to indices based on steady_clock time_stamps
    */
   std::map<uint64_t, int> indices_by_time_stamp;
+
+  /**
+   * Provide access to steady_clock time_stamp based on index
+   */
+  std::map<int, uint64_t> time_stamp_by_index;
 
   /**
    * Index of the next image read in the video

@@ -107,7 +107,7 @@ public:
     }
     if (points_in_img.size() >= 4)
     {
-      field->tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 2);
+      field->tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 2.0, 30);
     }
 
     cv::putText(display_img, getTagRequest(), cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, cv::Scalar(0, 0, 0), 2);

@@ -101,7 +101,7 @@ cv::Mat OpenCVImageProvider::getNextImg()
 {
   input.read(img);
 
-  uint64_t time_stamp = getTimeStamp();
+  uint64_t time_stamp = hl_communication::getTimeStamp();
   if (img.empty())
   {
     throw std::runtime_error(HL_DEBUG + "Blank frame at frame: " + std::to_string(index) + "/" +

@@ -180,7 +180,7 @@ cv::Mat FlyCapImageProvider::getNextImg()
     }
   }
 
-  uint64_t time_stamp = getTimeStamp();
+  uint64_t time_stamp = hl_communication::getTimeStamp();
 
   unsigned int bytes_per_row = fc_image.GetReceivedDataSize() / fc_image.GetRows();
   cv::Mat tmp_img = cv::Mat(fc_image.GetRows(), fc_image.GetCols(), CV_8UC3, fc_image.GetData(), bytes_per_row).clone();

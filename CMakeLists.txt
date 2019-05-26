@@ -13,7 +13,7 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 # Require an external dependency to flycapture library
-option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" OFF)
+option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" ON)
 
 #Enable C++17
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")

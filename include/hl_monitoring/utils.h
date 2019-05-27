@@ -6,6 +6,7 @@
 
 #include <json/json.h>
 #include <opencv2/core.hpp>
+#include <Eigen/Geometry>
 
 /**
  * Contains multiple conversion tools from hl_communication protobuf format to
@@ -27,6 +28,16 @@ void cvToIntrinsic(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeff
                    IntrinsicParameters* camera_parameters);
 void pose3DToCV(const Pose3D& pose, cv::Mat* rvec, cv::Mat* tvec);
 void cvToPose3D(const cv::Mat& rvec, const cv::Mat& tvec, Pose3D* pose);
+
+/**
+ * Convert a protobuf Pose3D to an Affine3D transform
+ */
+Eigen::Affine3d getAffineFromProtobuf(const hl_monitoring::Pose3D& pose);
+
+/**
+ * Export the given Affine3D transform to a pose
+ */
+void setProtobufFromAffine(const Eigen::Affine3d& affine, hl_monitoring::Pose3D* pose);
 
 std::ostream& operator<<(std::ostream& out, const Pose3D& pose);
 

@@ -9,6 +9,7 @@ pkg_check_modules(JSONCPP jsoncpp)
 find_package(OpenCV REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
+  eigen
   hl_communication
   )
 
@@ -65,7 +66,7 @@ endif(HL_MONITORING_USES_FLYCAPTURE)
 catkin_package(
   INCLUDE_DIRS ${DELEGATE_INCLUDE_DIRS}
   LIBRARIES ${PROJECT_NAME} ${DELEGATE_LIBRARIES}
-  CATKIN_DEPENDS hl_communication
+  CATKIN_DEPENDS eigen hl_communication
   )
 
 include_directories(${DELEGATE_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )

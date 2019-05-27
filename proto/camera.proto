@@ -59,6 +59,17 @@ message CameraMetaInformation {
   optional Pose3D pose = 2;
 }
 
+/**
+ * Describe the condition of acquisition of the frames, is useful to estimate
+ * continuity of poses in a stream
+ */
+enum FrameStatus {
+  UNKNOWN_FRAME_STATUS = 0;
+  STATIC  = 1;// The camera is not moving, previous poses can be considered as valid
+  MOVING  = 2;// The camera is moving slowly, interpolation of pose should be satisfying
+  SHAKING = 3;// The camera is shaking, interpolation of pose is unlikely to give satisfying results
+}
+
 message FrameEntry {
   /**
    * Time at which the pose was measured or estimated
@@ -68,6 +79,7 @@ message FrameEntry {
    * The transformation from field referential to camera referential
    */
   optional Pose3D pose = 2;
+  optional FrameStatus status = 3;
 }
 
 message VideoMetaInformation {

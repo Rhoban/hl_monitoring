@@ -186,7 +186,7 @@ void tryReadMap(const Json::Value& v, const std::string& key, std::map<uint32_t,
 template <typename T>
 Json::Value map2Json(const std::map<uint32_t, T>& values)
 {
-  Json::Value v;
+  Json::Value v(Json::objectValue);
   for (const auto& pair : values)
   {
     v[std::to_string(pair.first)] = val2Json(pair.second);

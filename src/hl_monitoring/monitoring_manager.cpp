@@ -1,6 +1,7 @@
 #include "hl_monitoring/monitoring_manager.h"
 
 #include <hl_communication/utils.h>
+#include <hl_communication/game_controller_utils.h>
 #include <hl_monitoring/opencv_image_provider.h>
 #include <hl_monitoring/replay_image_provider.h>
 #include <hl_monitoring/utils.h>
@@ -18,7 +19,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-MonitoringManager::MonitoringManager()
+MonitoringManager::MonitoringManager() : live(false)
 {
 }
 
@@ -32,6 +33,17 @@ MonitoringManager::~MonitoringManager()
   {
     delete (entry.second.release());
   }
+}
+
+void MonitoringManager::autoLiveStart()
+{
+  live = true;
+  image_providers.clear();
+  message_manager.reset(new MessageManager(getGCDefaultPort(), true));
+  field = Field();
+  team_manager = TeamManager();
+  setupOutput();
+  dumpReplayConfig();
 }
 
 void MonitoringManager::loadConfig(const std::string& path)

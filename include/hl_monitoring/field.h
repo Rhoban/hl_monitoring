@@ -172,6 +172,10 @@ public:
 
 private:
   /**
+   * Synchronize all the features with the current field dimensions
+   */
+  void updateAll();
+  /**
    * Synchronize the points of interests with current size of the field
    */
   void updatePointsOfInterest();

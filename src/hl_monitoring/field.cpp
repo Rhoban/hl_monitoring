@@ -81,6 +81,7 @@ Field::Field()
   goal_area_width = 5.00;
   field_length = 9.00;
   field_width = 6.00;
+  updateAll();
 }
 
 Json::Value Field::toJson() const
@@ -117,12 +118,7 @@ void Field::fromJson(const Json::Value& v)
   readVal(v, "goal_area_width", &goal_area_width);
   readVal(v, "field_length", &field_length);
   readVal(v, "field_width", &field_width);
-  updatePointsOfInterest();
-  updateWhiteLines();
-  updateArenaBorders();
-  updateGoals();
-  updatePenaltyMarks();
-  updatePointsOfInterestByType();
+  updateAll();
 }
 
 void Field::loadFile(const std::string& path)
@@ -182,6 +178,16 @@ const std::vector<cv::Point3f>& Field::getPenaltyMarks() const
 const Field::POICollection& Field::getPointsOfInterestByType() const
 {
   return poi_by_type;
+}
+
+void Field::updateAll()
+{
+  updatePointsOfInterest();
+  updateWhiteLines();
+  updateArenaBorders();
+  updateGoals();
+  updatePenaltyMarks();
+  updatePointsOfInterestByType();
 }
 
 void Field::updatePointsOfInterest()

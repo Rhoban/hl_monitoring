@@ -24,6 +24,15 @@ public:
   MonitoringManager();
   ~MonitoringManager();
 
+  /**
+   * Starts with a default configuration in live mode:
+   * - No image providers
+   * - Message manager listening on GameController port with auto_discovery
+   * - Default Field
+   * - Empty team manager
+   */
+  void autoLiveStart();
+
   void loadConfig(const std::string& path);
   /**
    * Creates the appropriate output directory if live mode is enabled.

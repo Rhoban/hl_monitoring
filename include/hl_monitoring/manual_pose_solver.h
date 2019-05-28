@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hl_communication/labelling.pb.h>
 #include <hl_monitoring/camera.pb.h>
 #include <hl_monitoring/field.h>
 
@@ -17,10 +18,17 @@ public:
   ~ManualPoseSolver();
 
   bool solve(cv::Mat* rvec, cv::Mat* tvec);
-  bool solve(Pose3D* pose);
+  bool solve(Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches = nullptr);
+
+  static bool solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
+                        const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
+                        cv::Mat* tvec);
+  static bool solvePose(const std::vector<hl_communication::Match2D3DMsg>& matches,
+                        const IntrinsicParameters& camera_parameters, Pose3D* pose);
 
 private:
   void updatePose();
+  void exportMatches(std::vector<hl_communication::Match2D3DMsg>* matches);
   void onClick(int event, int x, int y, void* param);
 
   /**

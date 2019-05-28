@@ -65,6 +65,7 @@ public:
 
   virtual void setIntrinsic(const IntrinsicParameters& params);
   virtual void setDefaultPose(const Pose3D& pose);
+  virtual void setPose(int frame_idx, const Pose3D& pose);
 
   /**
    * Set the offset in us between steady_clock and system_clock (time_since_epoch)
@@ -81,12 +82,12 @@ public:
   /**
    * Return timestamp of current image (steady clock)
    */
-  int64_t getTimeStamp() const;
+  uint64_t getTimeStamp() const;
 
   /**
-   * Return timestamp at given image index (steady_clock
+   * Return timestamp at given image index (steady_clock)
    */
-  int64_t getTimeStamp(int idx) const;
+  uint64_t getTimeStamp(int idx) const;
 
   /**
    * Retrieve the meta information corresponding to current img
@@ -96,6 +97,12 @@ public:
    * Retrieve the meta information corresponding to the given img index
    */
   CameraMetaInformation getCameraMetaInformation(int index) const;
+
+  /**
+   * Return the index of the last entry before given time_stamp, if there are no
+   * entry before this time_stamp, returns -1
+   */
+  int getIndex(uint64_t time_stamp) const;
 
 protected:
   /**

@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+using namespace hl_communication;
+
 namespace hl_monitoring
 {
 ManualPoseSolver::ManualPoseSolver(const cv::Mat& img, const IntrinsicParameters& camera_parameters, const Field& field)
@@ -48,6 +50,45 @@ void ManualPoseSolver::updatePose()
     img_points.push_back(entry.second);
   }
   cv::solvePnP(object_points, img_points, camera_matrix, distortion_coefficients, rvec, tvec);
+}
+
+void ManualPoseSolver::exportMatches(std::vector<hl_communication::Match2D3DMsg>* matches)
+{
+  matches->clear();
+  for (size_t idx = 0; idx < points_in_img.size(); idx++)
+  {
+    Match2D3DMsg msg;
+    cvToProtobuf(points_in_img[idx], msg.mutable_img_pos());
+    cvToProtobuf(points_in_world[idx], msg.mutable_obj_pos());
+    matches->push_back(msg);
+  }
+}
+
+bool ManualPoseSolver::solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
+                                 const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
+                                 cv::Mat* tvec)
+{
+  if (img_pos.size() < 4)
+    return false;
+  cv::solvePnP(obj_pos, img_pos, camera_matrix, distortion_coefficients, *rvec, *tvec);
+  return true;
+}
+
+bool ManualPoseSolver::solvePose(const std::vector<Match2D3DMsg>& matches, const IntrinsicParameters& camera_parameters,
+                                 Pose3D* pose)
+{
+  std::vector<cv::Point2f> img_pos;
+  std::vector<cv::Point3f> obj_pos;
+  protobufToCV(matches, &img_pos, &obj_pos);
+  cv::Mat camera_matrix, distortion_coefficients, rvec, tvec;
+  cv::Size img_size;
+  intrinsicToCV(camera_parameters, &camera_matrix, &distortion_coefficients, &img_size);
+  if (solvePose(img_pos, obj_pos, camera_matrix, distortion_coefficients, &rvec, &tvec))
+  {
+    cvToPose3D(rvec, tvec, pose);
+    return true;
+  }
+  return false;
 }
 
 void ManualPoseSolver::onClick(int event, int x, int y, void* param)
@@ -126,10 +167,15 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
   return false;
 }
 
-bool ManualPoseSolver::solve(Pose3D* pose)
+bool ManualPoseSolver::solve(Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches)
 {
   cv::Mat loc_rvec, loc_tvec;
-  if (solve(&loc_rvec, &loc_tvec))
+  bool success = solve(&loc_rvec, &loc_tvec);
+  if (matches != nullptr)
+  {
+    exportMatches(matches);
+  }
+  if (success)
   {
     cvToPose3D(loc_rvec, loc_tvec, pose);
     return true;

@@ -1,5 +1,7 @@
 #include "hl_monitoring/image_provider.h"
 
+#include <hl_communication/utils.h>
+
 namespace hl_monitoring
 {
 ImageProvider::ImageProvider() : index(-1), nb_frames(0)
@@ -44,6 +46,11 @@ void ImageProvider::setDefaultPose(const Pose3D& pose)
   meta_information.mutable_default_pose()->CopyFrom(pose);
 }
 
+void ImageProvider::setPose(int frame_idx, const Pose3D& pose)
+{
+  meta_information.mutable_frames(frame_idx)->mutable_pose()->CopyFrom(pose);
+}
+
 void ImageProvider::setOffset(int64 offset)
 {
   meta_information.set_time_offset(offset);
@@ -75,6 +82,11 @@ CameraMetaInformation ImageProvider::getCameraMetaInformation(int index) const
   {
     camera_meta.mutable_camera_parameters()->CopyFrom(meta_information.camera_parameters());
   }
+  if (meta_information.frames_size() <= index)
+  {
+    *(int*)(nullptr) = 0;
+    throw std::out_of_range(HL_DEBUG + "invalid index: " + std::to_string(index));
+  }
 
   const FrameEntry& frame = meta_information.frames(index);
   if (frame.has_pose())
@@ -88,12 +100,12 @@ CameraMetaInformation ImageProvider::getCameraMetaInformation(int index) const
   return camera_meta;
 }
 
-int64_t ImageProvider::getTimeStamp() const
+uint64_t ImageProvider::getTimeStamp() const
 {
   return getTimeStamp(index);
 }
 
-int64_t ImageProvider::getTimeStamp(int idx) const
+uint64_t ImageProvider::getTimeStamp(int idx) const
 {
   return time_stamp_by_index.at(idx);
 }
@@ -102,6 +114,20 @@ void ImageProvider::pushTimeStamp(int idx, uint64_t time_stamp)
 {
   indices_by_time_stamp[time_stamp] = idx;
   time_stamp_by_index[idx] = time_stamp;
+}
+
+int ImageProvider::getIndex(uint64_t time_stamp) const
+{
+  if (indices_by_time_stamp.size() == 0 || indices_by_time_stamp.begin()->first > time_stamp)
+  {
+    return -1;
+  }
+  auto it = indices_by_time_stamp.upper_bound(time_stamp);
+  if (it == indices_by_time_stamp.end() || it->first > time_stamp)
+  {
+    it--;
+  }
+  return it->second;
 }
 
 }  // namespace hl_monitoring

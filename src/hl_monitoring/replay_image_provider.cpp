@@ -30,6 +30,7 @@ void ReplayImageProvider::loadVideo(const std::string& video_path)
   }
   index = 0;
   nb_frames = video.get(cv::CAP_PROP_FRAME_COUNT);
+  std::cout << "Nb frames in video: " << nb_frames << std::endl;
 }
 
 void ReplayImageProvider::loadMetaInformation(const std::string& meta_information_path)
@@ -121,19 +122,4 @@ void ReplayImageProvider::setIndex(int new_index)
     throw std::runtime_error(HL_DEBUG + "Failed to set index to " + std::to_string(index) + " in video");
   }
 }
-
-int ReplayImageProvider::getIndex(uint64_t time_stamp) const
-{
-  if (indices_by_time_stamp.size() == 0 || indices_by_time_stamp.begin()->first > time_stamp)
-  {
-    return -1;
-  }
-  auto it = indices_by_time_stamp.upper_bound(time_stamp);
-  if (it == indices_by_time_stamp.end() || it->first > time_stamp)
-  {
-    it--;
-  }
-  return it->second;
-}
-
 }  // namespace hl_monitoring

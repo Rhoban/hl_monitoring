@@ -3,6 +3,7 @@
 #include <hl_monitoring/camera.pb.h>
 
 #include <hl_communication/position.pb.h>
+#include <hl_communication/labelling.pb.h>
 
 #include <json/json.h>
 #include <opencv2/core.hpp>
@@ -60,6 +61,14 @@ cv::Size getImgSize(const CameraMetaInformation& camera_information);
 cv::Point3f fieldToCamera(const cv::Point3f& pos_in_field, const cv::Mat& rvec, const cv::Mat& tvec);
 
 cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information);
+
+cv::Point2f protobufToCV(const hl_communication::Point2DMsg& msg);
+cv::Point3f protobufToCV(const hl_communication::Point3DMsg& msg);
+void cvToProtobuf(const cv::Point2f& pos, hl_communication::Point2DMsg* msg);
+void cvToProtobuf(const cv::Point3f& pos, hl_communication::Point3DMsg* msg);
+
+void protobufToCV(const std::vector<hl_communication::Match2D3DMsg>& matches, std::vector<cv::Point2f>* img_pos,
+                  std::vector<cv::Point3f>* obj_pos);
 
 /**
  * Convert from field position to an image position based on camera_information.

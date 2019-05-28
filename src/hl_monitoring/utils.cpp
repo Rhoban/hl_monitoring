@@ -244,6 +244,41 @@ cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformat
   return img_points[0];
 }
 
+cv::Point2f protobufToCV(const Point2DMsg& msg)
+{
+  return cv::Point2f(msg.x(), msg.y());
+}
+
+cv::Point3f protobufToCV(const Point3DMsg& msg)
+{
+  return cv::Point3f(msg.x(), msg.y(), msg.z());
+}
+
+void cvToProtobuf(const cv::Point2f& pos, hl_communication::Point2DMsg* msg)
+{
+  msg->set_x(pos.x);
+  msg->set_y(pos.y);
+}
+
+void cvToProtobuf(const cv::Point3f& pos, hl_communication::Point3DMsg* msg)
+{
+  msg->set_x(pos.x);
+  msg->set_y(pos.y);
+  msg->set_z(pos.z);
+}
+
+void protobufToCV(const std::vector<hl_communication::Match2D3DMsg>& matches, std::vector<cv::Point2f>* img_pos,
+                  std::vector<cv::Point3f>* obj_pos)
+{
+  img_pos->clear();
+  obj_pos->clear();
+  for (const Match2D3DMsg& match : matches)
+  {
+    img_pos->push_back(protobufToCV(match.img_pos()));
+    obj_pos->push_back(protobufToCV(match.obj_pos()));
+  }
+}
+
 bool fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformation& camera_information, cv::Point2f* img_pos)
 {
   cv::Mat rvec, tvec;

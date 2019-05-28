@@ -27,11 +27,6 @@ public:
   bool isStreamFinished() override;
 
   void setIndex(int index);
-  /**
-   * Return the index of the last entry before given time_stamp, if there are no
-   * entry before this time_stamp, returns -1
-   */
-  int getIndex(uint64_t time_stamp) const;
 
 private:
   /**

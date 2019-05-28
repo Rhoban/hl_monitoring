@@ -364,4 +364,9 @@ const TeamManager& MonitoringManager::getTeamManager() const
   return team_manager;
 }
 
+void MonitoringManager::setPose(const std::string& provider_name, int frame_idx, const Pose3D& pose)
+{
+  image_providers.at(provider_name)->setPose(frame_idx, pose);
+}
+
 }  // namespace hl_monitoring

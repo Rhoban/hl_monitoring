@@ -14,8 +14,8 @@ TopViewDrawer::TopViewDrawer(const cv::Size& img_size)
   , lines_color(220, 220, 220)
   , goals_color(85, 85, 85)
   , goals_disposition(GoalsDisposition::GoalsNeutral)
-  , blue_color(205, 105, 51)
-  , red_color(44, 28, 197)
+  , blue_color(128, 35, 35)
+  , red_color(41, 33, 122)
 {
 }
 

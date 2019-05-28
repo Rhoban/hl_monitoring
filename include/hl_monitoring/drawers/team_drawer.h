@@ -42,7 +42,7 @@ private:
    */
   int player_focus;
 
-  std::map<uint32_t,cv::Scalar> color_by_team_id;
+  std::map<uint32_t, cv::Scalar> color_by_team_id;
 
   void updateColorsById(const hl_communication::GCMsg& gc_msg);
 };

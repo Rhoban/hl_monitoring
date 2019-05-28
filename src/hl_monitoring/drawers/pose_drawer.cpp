@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PoseDrawer::PoseDrawer() : circle_radius(15.0), thickness(5.0), color(0, 0, 0)
+PoseDrawer::PoseDrawer() : circle_radius(15.0), thickness(3.0), color(0, 0, 0)
 {
 }
 
@@ -30,7 +30,7 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
   bool valid_pos = converter(field_pos, &img_pos);
   if (valid_pos)
   {
-    cv::circle(*out, img_pos, circle_radius, color, thickness);
+    cv::circle(*out, img_pos, circle_radius, color, thickness, cv::LINE_AA);
   }
   // Tagging dir
   if (valid_pos && pose.has_dir())
@@ -45,7 +45,7 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
       cv::Point2f img_dir = img_end - img_pos;
       float img_length = std::sqrt(img_dir.x * img_dir.x + img_dir.y * img_dir.y);
       cv::Point2f img_arrow_end = img_pos + circle_radius * img_dir / img_length;
-      cv::line(*out, img_pos, img_arrow_end, color, thickness);
+      cv::line(*out, img_pos, img_arrow_end, color, thickness, cv::LINE_AA);
     }
   }
 }

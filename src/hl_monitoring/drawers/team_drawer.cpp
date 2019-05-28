@@ -78,7 +78,7 @@ void TeamDrawer::fromJson(const Json::Value& v)
 void TeamDrawer::updateColorsById(const GCMsg& gc_msg)
 {
   color_by_team_id.clear();
-  std::vector<cv::Scalar> team_colors = { cv::Scalar(205, 105, 51), cv::Scalar(44, 28, 197) };
+  std::vector<cv::Scalar> team_colors = { cv::Scalar(205, 105, 51), cv::Scalar(218, 57, 182) };
   for (int idx = 0; idx < gc_msg.teams_size(); idx++)
   {
     const GCTeamMsg& team_msg = gc_msg.teams(idx);

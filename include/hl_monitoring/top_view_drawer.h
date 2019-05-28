@@ -13,6 +13,21 @@ public:
   void setImgSize(const cv::Size& new_img_size);
 
   /**
+   * Tell which side are which goals when drawing the field
+   */
+  enum GoalsDisposition
+  {
+    GoalsNeutral = 0,
+    GoalsBlueLeft,
+    GoalsBlueRight
+  };
+
+  /**
+   * Sets the goal disposition to draw (see above)
+   */
+  void setGoalsDisposition(GoalsDisposition goals_disposition);
+
+  /**
    * Return an Image with the field drawn on it
    */
   cv::Mat getImg(const Field& f) const;
@@ -53,6 +68,21 @@ private:
    * Color used for parts outside of the field
    */
   cv::Scalar goals_color;
+
+  /**
+   * Blue team color
+   */
+  cv::Scalar blue_color;
+
+  /**
+   * Red team color
+   */
+  cv::Scalar red_color;
+
+  /**
+   * Goals disposition
+   */
+  GoalsDisposition goals_disposition;
 
   /**
    * Return the width of the lines on image

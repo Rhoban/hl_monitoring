@@ -12,13 +12,21 @@ TopViewDrawer::TopViewDrawer(const cv::Size& img_size)
   , background_color(0, 0, 0)
   , field_color(92, 184, 92)
   , lines_color(220, 220, 220)
-  , goals_color(0, 0, 255)
+  , goals_color(85, 85, 85)
+  , goals_disposition(GoalsDisposition::GoalsNeutral)
+  , blue_color(205, 105, 51)
+  , red_color(44, 28, 197)
 {
 }
 
 void TopViewDrawer::setImgSize(const cv::Size& new_img_size)
 {
   img_size = new_img_size;
+}
+
+void TopViewDrawer::setGoalsDisposition(TopViewDrawer::GoalsDisposition goals_disposition_)
+{
+  goals_disposition = goals_disposition_;
 }
 
 cv::Mat TopViewDrawer::getImg(const Field& f) const
@@ -94,11 +102,24 @@ void TopViewDrawer::drawPenaltyMarks(const Field& f, cv::Mat* dst) const
 
 void TopViewDrawer::drawGoals(const Field& f, cv::Mat* dst) const
 {
+  bool left = true;
   for (const Field::Segment& goal : f.getGoals())
   {
+    cv::Scalar color = goals_color;
+
+    if (goals_disposition == GoalsBlueLeft)
+    {
+      color = left ? blue_color : red_color;
+    }
+    else if (goals_disposition == GoalsBlueRight)
+    {
+      color = left ? red_color : blue_color;
+    }
+
     cv::Point pt1 = getImgFromField(f, goal.first);
     cv::Point pt2 = getImgFromField(f, goal.second);
-    cv::line(*dst, pt1, pt2, goals_color, getGoalWidth(f), cv::LINE_AA);
+    cv::line(*dst, pt1, pt2, color, getGoalWidth(f), cv::LINE_AA);
+    left = false;
   }
 }
 

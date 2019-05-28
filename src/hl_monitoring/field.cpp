@@ -73,7 +73,7 @@ Field::Field()
   center_radius = 0.75;
   border_strip_width_x = 0.70;  // Minimum value
   border_strip_width_y = 0.70;  // Minimum value
-  penalty_mark_dist = 2.10;
+  penalty_mark_dist = 1.50;
   penalty_mark_length = 0.10;
   goal_width = 2.60;
   goal_depth = 0.60;

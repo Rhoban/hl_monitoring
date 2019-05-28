@@ -30,7 +30,7 @@ void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f
     int unused_baseline;
     cv::Size text_size = cv::getTextSize(msg, font_face, font_scale, font_thickness, &unused_baseline);
     cv::Point text_pos = img_pos + cv::Point2f(-text_size.width, text_size.height) / 2;
-    cv::putText(*out, msg, text_pos, font_face, font_scale, color, font_thickness);
+    cv::putText(*out, msg, text_pos, font_face, font_scale, color, font_thickness, cv::LINE_AA);
   }
 }
 

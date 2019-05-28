@@ -378,7 +378,7 @@ void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coe
       cv::Rect2f img_rect(cv::Point(), tag_img->size());
       if (img_rect.contains(img_points[0]) && img_rect.contains(img_points[1]))
       {
-        cv::line(*tag_img, img_points[0], img_points[1], line_color, line_thickness);
+        cv::line(*tag_img, img_points[0], img_points[1], line_color, line_thickness, cv::LINE_AA);
       }
     }
   }

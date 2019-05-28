@@ -30,9 +30,9 @@ void ArrowDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3
     double arrow_length = cv::norm(cv::Mat(img_end - img_src));
     double arrow_tip_ratio = arrow_tip_length / arrow_length;
     // TODO: tmp test
-    //cv::arrowedLine(*out, img_src, img_end, color, arrow_thickness, 0, 0, arrow_tip_ratio);
-    cv::line(*out, img_src, img_end, color, arrow_thickness);
-    cv::drawMarker(*out, img_end, color, cv::MARKER_TILTED_CROSS, 15, 5);
+    // cv::arrowedLine(*out, img_src, img_end, color, arrow_thickness, 0, 0, arrow_tip_ratio);
+    cv::line(*out, img_src, img_end, color, arrow_thickness, cv::LINE_AA);
+    cv::drawMarker(*out, img_end, color, cv::MARKER_TILTED_CROSS, 15, 5, cv::LINE_AA);
   }
 }
 

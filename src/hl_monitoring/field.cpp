@@ -260,8 +260,8 @@ void Field::updateArenaBorders()
 
 void Field::updateGoals()
 {
-  goals = { { getPoint("post_base++"), getPoint("post_base+-") },
-            { getPoint("post_base-+"), getPoint("post_base--") } };
+  goals = { { getPoint("post_base-+"), getPoint("post_base--") },
+            { getPoint("post_base++"), getPoint("post_base+-") } };
   goal_posts = { getPoint("post_base++"), getPoint("post_base+-"), getPoint("post_base-+"), getPoint("post_base--") };
 }
 

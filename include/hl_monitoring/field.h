@@ -87,7 +87,12 @@ public:
   const std::map<std::string, cv::Point3f>& getPointsOfInterest() const;
   const std::vector<Segment>& getArenaBorders() const;
   const std::vector<Segment>& getWhiteLines() const;
+
+  /**
+   * Returns the goals (first the x- and then the x+)
+   */
   const std::vector<Segment>& getGoals() const;
+
   const std::vector<cv::Point3f>& getGoalPosts() const;
   const std::vector<cv::Point3f>& getPenaltyMarks() const;
 

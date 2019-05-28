@@ -11,7 +11,8 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-ArrowDrawer::ArrowDrawer() : color(0, 0, 0), arrow_thickness(2.0), arrow_tip_length(20)
+ArrowDrawer::ArrowDrawer(ArrowType type, double arrow_thickness)
+  : type(type), color(0, 0, 0), arrow_thickness(arrow_thickness), arrow_tip_length(20)
 {
 }
 
@@ -29,10 +30,16 @@ void ArrowDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3
   {
     double arrow_length = cv::norm(cv::Mat(img_end - img_src));
     double arrow_tip_ratio = arrow_tip_length / arrow_length;
-    // TODO: tmp test
-    cv::arrowedLine(*out, img_src, img_end, color, arrow_thickness, cv::LINE_AA, 0, arrow_tip_ratio);
-    // cv::line(*out, img_src, img_end, color, arrow_thickness, cv::LINE_AA);
-    // cv::drawMarker(*out, img_end, color, cv::MARKER_TILTED_CROSS, 15, 5, cv::LINE_AA);
+
+    if (type == ArrowHead)
+    {
+      cv::arrowedLine(*out, img_src, img_end, color, arrow_thickness, cv::LINE_AA, 0, arrow_tip_ratio);
+    }
+    else if (type == ArrowCross)
+    {
+      cv::line(*out, img_src, img_end, color, arrow_thickness, cv::LINE_AA);
+      cv::drawMarker(*out, img_end, color, cv::MARKER_TILTED_CROSS, 15, arrow_thickness, cv::LINE_AA);
+    }
   }
 }
 

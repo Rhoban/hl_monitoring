@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PlayerDrawer::PlayerDrawer() : color(0, 0, 0)
+PlayerDrawer::PlayerDrawer() : color(0, 0, 0), target_drawer(ArrowDrawer::ArrowCross, 1.0)
 {
 }
 

@@ -77,6 +77,7 @@ int TopViewDrawer::getMarkLength(const Field& f) const
 
 void TopViewDrawer::drawTurf(const Field& f, cv::Mat* dst) const
 {
+  cv::floodFill(*dst, cv::Point2d(0, 0), cv::Scalar(255, 255, 255));
   cv::Point pt1 = getImgFromField(f, f.getPoint("arena_corner--"));
   cv::Point pt2 = getImgFromField(f, f.getPoint("arena_corner++"));
   cv::rectangle(*dst, pt1, pt2, field_color, CV_FILLED);

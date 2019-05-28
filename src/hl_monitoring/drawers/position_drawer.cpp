@@ -24,7 +24,7 @@ void PositionDrawer::draw(FieldToImgConverter converter, const PositionDistribut
   bool valid = converter(field_pos, &img_pos);
   if (valid)
   {
-    cv::circle(*out, img_pos, circle_radius, color, cv::FILLED);
+    cv::circle(*out, img_pos, circle_radius, color, cv::FILLED, cv::LINE_AA);
   }
 }
 

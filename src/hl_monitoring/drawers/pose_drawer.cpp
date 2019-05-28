@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PoseDrawer::PoseDrawer() : circle_radius(15.0), thickness(5.0), color(0, 0, 0)
+PoseDrawer::PoseDrawer() : circle_radius(15.0), thickness(3.0), color(0, 0, 0)
 {
 }
 

@@ -9,7 +9,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-TextDrawer::TextDrawer() : img_offset(0, 0), font_scale(1.0), font_thickness(3.0), color(0, 0, 0)
+TextDrawer::TextDrawer() : img_offset(0, 0), font_scale(1.0), font_thickness(2.0), color(0, 0, 0)
 {
 }
 

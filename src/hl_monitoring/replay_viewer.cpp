@@ -12,8 +12,9 @@ using namespace hl_communication;
 namespace hl_monitoring
 {
 ReplayViewer::ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, const std::string& window_name,
-                           bool playing)
+                           bool playing, const Field& field)
   : provider(std::move(image_provider))
+  , field(field)
   , window_name(window_name)
   , now(0)
   , step_ms(33)  // Default frequency -> ~30Hz
@@ -43,6 +44,7 @@ void ReplayViewer::run()
     uint64_t start = getTimeStamp();
     updateTime();
     step();
+    paintImg();
     cv::imshow(window_name, display_img);
     uint64_t end = getTimeStamp();
     int wait_time_ms = 0;

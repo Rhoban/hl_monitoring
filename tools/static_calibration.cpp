@@ -25,10 +25,7 @@ class CalibrationViewer : public ReplayViewer
 public:
   CalibrationViewer(std::unique_ptr<ReplayImageProvider> provider, const Field& field,
                     const IntrinsicParameters& camera_parameters)
-    : ReplayViewer(std::move(provider), "CalibrationTool", false)
-    , field(field)
-    , intrinsic(camera_parameters)
-    , has_calib(false)
+    : ReplayViewer(std::move(provider), "CalibrationTool", false, field), intrinsic(camera_parameters), has_calib(false)
   {
     addBinding('c', "Run pose calibration", [this]() { this->runCalibration(); });
   }

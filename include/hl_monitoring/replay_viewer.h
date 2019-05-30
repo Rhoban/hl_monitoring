@@ -1,5 +1,6 @@
 #pragma once
 
+#include <hl_monitoring/field.h>
 #include <hl_monitoring/replay_image_provider.h>
 
 #include <functional>
@@ -10,7 +11,7 @@ class ReplayViewer
 {
 public:
   ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, const std::string& window_name,
-               bool playing = false);
+               bool playing = false, const Field& field = Field());
   virtual ~ReplayViewer();
 
   void run();
@@ -45,6 +46,11 @@ protected:
    * The source of the images
    */
   std::unique_ptr<ReplayImageProvider> provider;
+
+  /**
+   * The model of the field used for the replay
+   */
+  Field field;
 
   std::map<int, Action> key_bindings;
 

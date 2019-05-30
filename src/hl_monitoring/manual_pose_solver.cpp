@@ -55,11 +55,13 @@ void ManualPoseSolver::updatePose()
 void ManualPoseSolver::exportMatches(std::vector<hl_communication::Match2D3DMsg>* matches)
 {
   matches->clear();
-  for (size_t idx = 0; idx < points_in_img.size(); idx++)
+  for (const auto& entry : points_in_img)
   {
+    int point_idx = entry.first;
+    const cv::Point2f& img_point = entry.second;
     Match2D3DMsg msg;
-    cvToProtobuf(points_in_img[idx], msg.mutable_img_pos());
-    cvToProtobuf(points_in_world[idx], msg.mutable_obj_pos());
+    cvToProtobuf(img_point, msg.mutable_img_pos());
+    cvToProtobuf(points_in_world[point_idx], msg.mutable_obj_pos());
     matches->push_back(msg);
   }
 }

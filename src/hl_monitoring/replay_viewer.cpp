@@ -80,7 +80,7 @@ void ReplayViewer::printHelp()
 void ReplayViewer::step()
 {
   calibrated_img = provider->getCalibratedImage(now);
-  display_img = calibrated_img.getImg();
+  display_img = calibrated_img.getImg().clone();
 }
 
 void ReplayViewer::paintImg()

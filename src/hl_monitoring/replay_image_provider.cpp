@@ -3,7 +3,6 @@
 #include <hl_communication/utils.h>
 
 #include <fstream>
-#include <iostream>
 
 namespace hl_monitoring
 {
@@ -31,7 +30,6 @@ void ReplayImageProvider::loadVideo(const std::string& video_path)
   }
   index = 0;
   nb_frames = video.get(cv::CAP_PROP_FRAME_COUNT);
-  std::cout << "Nb frames in video: " << nb_frames << std::endl;
 }
 
 void ReplayImageProvider::loadMetaInformation(const std::string& meta_information_path)
@@ -47,7 +45,6 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
   }
   index = 0;
   nb_frames = meta_information.frames_size();
-  std::cout << "After loading meta informations: " << nb_frames << " frames" << std::endl;
   for (int idx = 0; idx < nb_frames; idx++)
   {
     uint64_t time_stamp = meta_information.frames(idx).time_stamp();
@@ -98,8 +95,7 @@ CalibratedImage ReplayImageProvider::getCalibratedImage(uint64_t time_stamp)
     }
     img = getNextImg();
   }
-
-  return CalibratedImage(img, getCameraMetaInformation(index));
+  return CalibratedImage(img, getCameraMetaInformation(new_index));
 }
 
 cv::Mat ReplayImageProvider::getNextImg()

@@ -84,7 +84,6 @@ CameraMetaInformation ImageProvider::getCameraMetaInformation(int index) const
   }
   if (meta_information.frames_size() <= index)
   {
-    *(int*)(nullptr) = 0;
     throw std::out_of_range(HL_DEBUG + "invalid index: " + std::to_string(index));
   }
 
@@ -127,7 +126,7 @@ int ImageProvider::getIndex(uint64_t time_stamp) const
   {
     it--;
   }
-  return it->second;
+  return std::min(nb_frames - 1, it->second);
 }
 
 }  // namespace hl_monitoring

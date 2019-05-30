@@ -14,6 +14,7 @@ ReplayImageProvider::ReplayImageProvider()
 ReplayImageProvider::ReplayImageProvider(const std::string& video_path)
 {
   loadVideo(video_path);
+  setDefaultMetaInformation();
 }
 
 ReplayImageProvider::ReplayImageProvider(const std::string& video_path, const std::string& meta_information_path)
@@ -55,6 +56,20 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
       throw std::runtime_error(HL_DEBUG + "Duplicated time_stamp " + std::to_string(time_stamp));
     }
     pushTimeStamp(idx, time_stamp);
+  }
+}
+
+void ReplayImageProvider::setDefaultMetaInformation()
+{
+  double fps = video.get(cv::CAP_PROP_FPS);
+  uint64_t dt = std::pow(10, 6) / fps;
+  uint64_t ts = 0;
+  for (int idx = 0; idx < nb_frames; idx++)
+  {
+    FrameEntry* frame = meta_information.add_frames();
+    frame->set_time_stamp(ts);
+    ts += dt;
+    pushTimeStamp(idx, ts);
   }
 }
 

@@ -7,6 +7,7 @@ set(SOURCES
   monitoring_manager.cpp
   opencv_image_provider.cpp
   replay_image_provider.cpp
+  replay_viewer.cpp
   team_config.cpp
   team_manager.cpp
   utils.cpp

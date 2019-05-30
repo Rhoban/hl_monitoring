@@ -14,6 +14,10 @@ public:
   ReplayImageProvider(const std::string& video_path, const std::string& meta_information_path);
 
   void loadVideo(const std::string& video_path);
+  /**
+   * Creates default meta information based on video fps
+   */
+  void setDefaultMetaInformation();
   void loadMetaInformation(const std::string& meta_information_path);
 
   void restartStream() override;

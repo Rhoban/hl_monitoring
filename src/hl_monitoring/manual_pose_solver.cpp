@@ -121,7 +121,7 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
     }
     if (points_in_img.size() >= 4)
     {
-      field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 2.0, 30);
+      field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 1.0, 30);
     }
 
     cv::Scalar text_color = cv::Scalar(255, 0, 255);

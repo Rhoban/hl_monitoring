@@ -93,6 +93,11 @@ protected:
    * When set to true, end run after the next step
    */
   bool end;
+
+  /**
+   * The color of text painted in the img
+   */
+  cv::Scalar text_color;
 };
 
 }  // namespace hl_monitoring

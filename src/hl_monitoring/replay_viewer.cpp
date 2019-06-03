@@ -4,6 +4,7 @@
 #include <hl_monitoring/field.h>
 
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include <iostream>
 
@@ -21,6 +22,7 @@ ReplayViewer::ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, 
   , playing(playing)
   , speed(1.0)
   , end(false)
+  , text_color(255, 255, 255)
 {
   now = provider->getStart();
   cv::namedWindow(window_name, cv::WINDOW_NORMAL);
@@ -29,6 +31,8 @@ ReplayViewer::ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, 
   addBinding('q', "Quit replay", [this]() { this->quit(); });
   addBinding('+', "Double speed", [this]() { this->setSpeed(2 * this->speed); });
   addBinding('-', "Divide speed by 2", [this]() { this->setSpeed(this->speed / 2); });
+  addBinding('b', "Set playing direction to backward", [this]() { this->setSpeed(-std::fabs(this->speed)); });
+  addBinding('f', "Set playing direction to forward", [this]() { this->setSpeed(std::fabs(this->speed)); });
   // TODO: add mouse handler
 }
 
@@ -85,6 +89,25 @@ void ReplayViewer::step()
 
 void ReplayViewer::paintImg()
 {
+  std::string speed_status;
+  if (playing)
+  {
+    if (speed > 0)
+    {
+      speed_status = "> " + std::to_string(speed) + "x";
+    }
+    else
+    {
+      speed_status = "< " + std::to_string(speed) + "x";
+    }
+  }
+  else
+  {
+    speed_status = "pause";
+  }
+  int offset = 5;
+  cv::Point bottom_left(offset, display_img.rows - offset);
+  cv::putText(display_img, speed_status, bottom_left, cv::HersheyFonts::FONT_HERSHEY_SIMPLEX, 1.0, text_color);
 }
 
 void ReplayViewer::updateTime()
@@ -96,7 +119,13 @@ void ReplayViewer::updateTime()
     {
       playing = false;
       now = provider->getEnd();
-      std::cout << "end of stream reached" << std::endl;
+      std::cerr << "End of stream reached" << std::endl;
+    }
+    else if (now < provider->getStart())
+    {
+      playing = false;
+      now = provider->getStart();
+      std::cerr << "Start of stream reached" << std::endl;
     }
   }
 }

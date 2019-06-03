@@ -90,6 +90,12 @@ public:
   uint64_t getTimeStamp(int idx) const;
 
   /**
+   * Return the frame entry for the given timestamp
+   *
+   */
+  const FrameEntry& getFrameEntry(uint64_t ts);
+
+  /**
    * Retrieve the meta information corresponding to current img
    */
   CameraMetaInformation getCameraMetaInformation() const;

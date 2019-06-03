@@ -109,6 +109,12 @@ uint64_t ImageProvider::getTimeStamp(int idx) const
   return time_stamp_by_index.at(idx);
 }
 
+const FrameEntry& ImageProvider::getFrameEntry(uint64_t ts)
+{
+  int idx = getIndex(ts);
+  return meta_information.frames(idx);
+}
+
 void ImageProvider::pushTimeStamp(int idx, uint64_t time_stamp)
 {
   indices_by_time_stamp[time_stamp] = idx;

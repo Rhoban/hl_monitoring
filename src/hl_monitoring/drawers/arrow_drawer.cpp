@@ -12,7 +12,7 @@ using namespace hl_communication;
 namespace hl_monitoring
 {
 ArrowDrawer::ArrowDrawer(ArrowType type, double arrow_thickness)
-  : type(type), color(0, 0, 0), arrow_thickness(arrow_thickness), arrow_tip_length(20)
+  : color(0, 0, 0), arrow_thickness(arrow_thickness), arrow_tip_length(20), type(type)
 {
 }
 

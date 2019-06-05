@@ -2,6 +2,7 @@
 
 #include <hl_communication/utils.h>
 #include <hl_monitoring/utils.h>
+#include <iostream>
 
 #include <opencv2/imgproc.hpp>
 
@@ -25,16 +26,29 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
     if (perception.self_in_field_size() > 0)
     {
       // Currently only draw first pose
+      for (int msg_idx = 0; msg_idx < perception.self_in_field_size(); msg_idx++)
+      {
+        const WeightedPose& weighted_pose = perception.self_in_field(msg_idx);
+        const PoseDistribution& pose = weighted_pose.pose();
+        pose_drawer.draw(converter, pose, out);
+
+        // pose_drawer.draw(converter, pose, out);
+
+        const PositionDistribution& position = pose.position();
+        cv::Point3f robot_pos(position.x(), position.y(), 0);
+
+        int robot_id = robot.robot_id().robot_id();
+
+        name_drawer.setImgOffset(cv::Point2f(0, 30));
+        name_drawer.draw(converter, { robot_pos, std::to_string(robot_id) }, out);
+      }
+
       const WeightedPose& weighted_pose = perception.self_in_field(0);
       const PoseDistribution& pose = weighted_pose.pose();
-      pose_drawer.draw(converter, pose, out);
       const PositionDistribution& position = pose.position();
       cv::Point3f robot_pos(position.x(), position.y(), 0);
 
       int robot_id = robot.robot_id().robot_id();
-
-      name_drawer.setImgOffset(cv::Point2f(0, 30));
-      name_drawer.draw(converter, { robot_pos, std::to_string(robot_id) }, out);
 
       // Drawing intention
       // TODO: take into account waypoints

@@ -244,6 +244,31 @@ cv::Point2f fieldToImg(const cv::Point3f& pos_in_field, const CameraMetaInformat
   return img_points[0];
 }
 
+int getIndex(const VideoMetaInformation& meta_information, uint64_t time_stamp)
+{
+  for (int idx = 0; idx < meta_information.frames_size(); idx++)
+  {
+    if (!meta_information.frames(idx).has_time_stamp())
+      throw std::logic_error(HL_DEBUG + " missing time stamp information");
+    uint64_t frame_ts = meta_information.frames(idx).time_stamp();
+    if (frame_ts == time_stamp)
+      return idx;
+    if (frame_ts > time_stamp)
+      return idx - 1;
+  }
+  return meta_information.frames_size() - 1;
+}
+
+uint64_t getTimeStamp(const VideoMetaInformation& meta_information, int index)
+{
+  if (meta_information.frames_size() <= index || index < 0)
+    throw std::out_of_range(HL_DEBUG + " invalid index: " + std::to_string(index));
+  const FrameEntry& frame = meta_information.frames(index);
+  if (!frame.has_time_stamp())
+    throw std::logic_error(HL_DEBUG + " frame has no TS available");
+  return frame.time_stamp();
+}
+
 cv::Point2f protobufToCV(const Point2DMsg& msg)
 {
   return cv::Point2f(msg.x(), msg.y());

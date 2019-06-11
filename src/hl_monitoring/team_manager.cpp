@@ -1,6 +1,8 @@
 #include <hl_monitoring/team_manager.h>
 
-#include <hl_monitoring/utils.h>
+#include <hl_communication/utils.h>
+
+using namespace hl_communication;
 
 namespace hl_monitoring
 {

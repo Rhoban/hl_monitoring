@@ -1,7 +1,6 @@
 #include "hl_monitoring/field.h"
 
 #include <hl_communication/utils.h>
-#include <hl_monitoring/utils.h>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
@@ -9,6 +8,8 @@
 
 #include <fstream>
 #include <iostream>
+
+using namespace hl_communication;
 
 namespace hl_monitoring
 {
@@ -319,7 +320,7 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
     cv::projectPoints(field_positions, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
     for (size_t idx = 0; idx < field_positions.size(); idx++)
     {
-      cv::Point3f camera_pos = hl_monitoring::fieldToCamera(field_positions[idx], rvec, tvec);
+      cv::Point3f camera_pos = hl_communication::fieldToCamera(field_positions[idx], rvec, tvec);
       if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))
       {
         cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
@@ -362,7 +363,7 @@ void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coe
       bool has_point_behind = false;
       for (const cv::Point3f& obj_point : object_points)
       {
-        cv::Point3f point_in_camera = hl_monitoring::fieldToCamera(obj_point, rvec, tvec);
+        cv::Point3f point_in_camera = hl_communication::fieldToCamera(obj_point, rvec, tvec);
         if (point_in_camera.z <= 0)
         {
           has_point_behind = true;

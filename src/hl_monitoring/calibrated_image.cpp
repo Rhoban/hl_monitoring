@@ -1,8 +1,10 @@
 #include "hl_monitoring/calibrated_image.h"
 
-#include "hl_monitoring/utils.h"
+#include <hl_communication/utils.h>
 
 #include <stdexcept>
+
+using namespace hl_communication;
 
 namespace hl_monitoring
 {

@@ -63,9 +63,9 @@ public:
    */
   virtual size_t getNbFrames() const;
 
-  virtual void setIntrinsic(const IntrinsicParameters& params);
-  virtual void setDefaultPose(const Pose3D& pose);
-  virtual void setPose(int frame_idx, const Pose3D& pose);
+  virtual void setIntrinsic(const hl_communication::IntrinsicParameters& params);
+  virtual void setDefaultPose(const hl_communication::Pose3D& pose);
+  virtual void setPose(int frame_idx, const hl_communication::Pose3D& pose);
 
   /**
    * Set the offset in us between steady_clock and system_clock (time_since_epoch)
@@ -77,7 +77,7 @@ public:
    */
   int64_t getOffset() const;
 
-  const VideoMetaInformation& getMetaInformation() const;
+  const hl_communication::VideoMetaInformation& getMetaInformation() const;
 
   /**
    * Return timestamp of current image (steady clock)
@@ -93,16 +93,16 @@ public:
    * Return the frame entry for the given timestamp
    *
    */
-  const FrameEntry& getFrameEntry(uint64_t ts);
+  const hl_communication::FrameEntry& getFrameEntry(uint64_t ts);
 
   /**
    * Retrieve the meta information corresponding to current img
    */
-  CameraMetaInformation getCameraMetaInformation() const;
+  hl_communication::CameraMetaInformation getCameraMetaInformation() const;
   /**
    * Retrieve the meta information corresponding to the given img index
    */
-  CameraMetaInformation getCameraMetaInformation(int index) const;
+  hl_communication::CameraMetaInformation getCameraMetaInformation(int index) const;
 
   /**
    * Return the index of the last entry before given time_stamp, if there are no
@@ -119,7 +119,7 @@ protected:
   /**
    * Information relevant to the video stream
    */
-  VideoMetaInformation meta_information;
+  hl_communication::VideoMetaInformation meta_information;
 
   /**
    * Provide access to indices based on steady_clock time_stamps

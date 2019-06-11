@@ -4,7 +4,6 @@
 #include <hl_communication/game_controller_utils.h>
 #include <hl_monitoring/opencv_image_provider.h>
 #include <hl_monitoring/replay_image_provider.h>
-#include <hl_monitoring/utils.h>
 
 #include <fstream>
 

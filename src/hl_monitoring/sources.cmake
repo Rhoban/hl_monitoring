@@ -10,7 +10,6 @@ set(SOURCES
   replay_viewer.cpp
   team_config.cpp
   team_manager.cpp
-  utils.cpp
   )
 
 if (HL_MONITORING_USES_FLYCAPTURE)

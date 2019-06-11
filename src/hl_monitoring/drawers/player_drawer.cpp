@@ -1,7 +1,6 @@
 #include <hl_monitoring/drawers/player_drawer.h>
 
 #include <hl_communication/utils.h>
-#include <hl_monitoring/utils.h>
 
 #include <opencv2/imgproc.hpp>
 
@@ -9,7 +8,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PlayerDrawer::PlayerDrawer() : color(0, 0, 0), target_drawer(ArrowDrawer::ArrowCross, 1.0)
+PlayerDrawer::PlayerDrawer() : target_drawer(ArrowDrawer::ArrowCross, 1.0), color(0, 0, 0)
 {
 }
 

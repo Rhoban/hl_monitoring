@@ -1,7 +1,7 @@
 #pragma once
 
 #include <hl_communication/labelling.pb.h>
-#include <hl_monitoring/camera.pb.h>
+#include <hl_communication/camera.pb.h>
 #include <hl_monitoring/field.h>
 
 #include <opencv2/core.hpp>
@@ -14,17 +14,18 @@ namespace hl_monitoring
 class ManualPoseSolver
 {
 public:
-  ManualPoseSolver(const cv::Mat& img, const IntrinsicParameters& camera_parameters, const Field& field);
+  ManualPoseSolver(const cv::Mat& img, const hl_communication::IntrinsicParameters& camera_parameters,
+                   const Field& field);
   ~ManualPoseSolver();
 
   bool solve(cv::Mat* rvec, cv::Mat* tvec);
-  bool solve(Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches = nullptr);
+  bool solve(hl_communication::Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches = nullptr);
 
   static bool solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
                         const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
                         cv::Mat* tvec);
   static bool solvePose(const std::vector<hl_communication::Match2D3DMsg>& matches,
-                        const IntrinsicParameters& camera_parameters, Pose3D* pose);
+                        const hl_communication::IntrinsicParameters& camera_parameters, hl_communication::Pose3D* pose);
 
 private:
   void updatePose();

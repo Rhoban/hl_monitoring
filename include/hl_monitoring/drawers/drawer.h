@@ -1,7 +1,8 @@
 #pragma once
 
 #include <hl_monitoring/top_view_drawer.h>
-#include <hl_monitoring/utils.h>
+#include <hl_communication/camera.pb.h>
+#include <hl_communication/utils.h>
 #include <hl_communication/wrapper.pb.h>
 
 #include <opencv2/core.hpp>
@@ -11,7 +12,6 @@
 
 namespace hl_monitoring
 {
-class CameraMetaInformation;
 class TopViewDrawer;
 
 template <class T>
@@ -41,10 +41,11 @@ public:
    * Draws the content of data on the 'out' image, using 'camera_information' to project information in the image basis
    * Might be overrided if behavior is different between TopView and drawing on natural images
    */
-  virtual void drawNatural(const CameraMetaInformation& camera_information, const T& data, cv::Mat* out)
+  virtual void drawNatural(const hl_communication::CameraMetaInformation& camera_information, const T& data,
+                           cv::Mat* out)
   {
     FieldToImgConverter converter = [camera_information](const cv::Point3f& field_pos, cv::Point2f* img_pos) {
-      return fieldToImg(field_pos, camera_information, img_pos);
+      return hl_communication::fieldToImg(field_pos, camera_information, img_pos);
     };
     draw(converter, data, out);
   }

@@ -86,7 +86,7 @@ public:
   const Field& getField() const;
   const TeamManager& getTeamManager() const;
 
-  void setPose(const std::string& provider_name, int frame_idx, const Pose3D& pose);
+  void setPose(const std::string& provider_name, int frame_idx, const hl_communication::Pose3D& pose);
 
 private:
   /**

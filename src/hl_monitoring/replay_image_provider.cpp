@@ -4,6 +4,8 @@
 
 #include <fstream>
 
+using namespace hl_communication;
+
 namespace hl_monitoring
 {
 ReplayImageProvider::ReplayImageProvider()

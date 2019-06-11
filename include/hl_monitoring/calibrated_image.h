@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hl_monitoring/camera.pb.h"
+#include "hl_communication/camera.pb.h"
 
 #include <opencv2/core.hpp>
 
@@ -13,12 +13,13 @@ class CalibratedImage
 {
 public:
   CalibratedImage();
-  CalibratedImage(const cv::Mat& img, const Pose3D& pose, const IntrinsicParameters& camera_parameters);
-  CalibratedImage(const cv::Mat& img, const CameraMetaInformation& camera_meta);
+  CalibratedImage(const cv::Mat& img, const hl_communication::Pose3D& pose,
+                  const hl_communication::IntrinsicParameters& camera_parameters);
+  CalibratedImage(const cv::Mat& img, const hl_communication::CameraMetaInformation& camera_meta);
 
   const cv::Mat& getImg() const;
 
-  const CameraMetaInformation& getCameraInformation() const;
+  const hl_communication::CameraMetaInformation& getCameraInformation() const;
 
   bool hasCameraParameters() const;
   bool hasPose() const;
@@ -34,7 +35,7 @@ public:
 private:
   cv::Mat img;
 
-  CameraMetaInformation camera_meta;
+  hl_communication::CameraMetaInformation camera_meta;
 };
 
 }  // namespace hl_monitoring

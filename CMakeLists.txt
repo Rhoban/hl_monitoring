@@ -1,15 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(hl_monitoring)
 
-include(FindProtobuf)
-find_package(Protobuf REQUIRED)
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(JSONCPP jsoncpp)
-
-find_package(OpenCV REQUIRED)
-
 find_package(catkin REQUIRED COMPONENTS
-  eigen
   hl_communication
   )
 
@@ -22,38 +14,10 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
 # Protobuf generate files with unused parameters
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 
-
-# Handling generated headers is based on Dirk Thomas answer on topic:
-# - https://answers.ros.org/answers/123416/revisions/
-catkin_destinations()
-file(MAKE_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION})
-
-set (PROTOBUF_MESSAGES
-  proto/camera.proto
-  )
-
-protobuf_generate_cpp(PROTO_SOURCES PROTO_HEADERS ${PROTOBUF_MESSAGES})
-
-set_source_files_properties(${PROTO_SOURCES} ${PROTO_HEADERS} PROPERTIES GENERATED TRUE)
-
-set(PROTO_DUMMY_FILE proto_generation)
-
-add_custom_command(
-  OUTPUT ${PROTO_DUMMY_FILE}
-  COMMAND cp ${PROTO_HEADERS} ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-  COMMAND touch ${PROTO_DUMMY_FILE}
-  DEPENDS ${PROTO_HEADERS}
-  )
-
 set(DELEGATE_INCLUDE_DIRS
-  include
-  ${CATKIN_DEVEL_PREFIX}/${CATKIN_GLOBAL_INCLUDE_DESTINATION}
-  ${OpenCV_DIR}
-  ${JSONCPP_INCLUDE_DIRS})
+  include)
 
-set(DELEGATE_LIBRARIES
-  ${OpenCV_LIBS}
-  ${JSONCPP_LIBRARIES})
+set(DELEGATE_LIBRARIES)
 
 if (HL_MONITORING_USES_FLYCAPTURE)
   add_definitions(-DHL_MONITORING_USES_FLYCAPTURE)
@@ -66,7 +30,7 @@ endif(HL_MONITORING_USES_FLYCAPTURE)
 catkin_package(
   INCLUDE_DIRS ${DELEGATE_INCLUDE_DIRS}
   LIBRARIES ${PROJECT_NAME} ${DELEGATE_LIBRARIES}
-  CATKIN_DEPENDS eigen hl_communication
+  CATKIN_DEPENDS hl_communication
   )
 
 include_directories(${DELEGATE_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )

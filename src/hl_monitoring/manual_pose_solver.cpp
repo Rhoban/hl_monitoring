@@ -1,6 +1,6 @@
 #include <hl_monitoring/manual_pose_solver.h>
 
-#include <hl_monitoring/utils.h>
+#include <hl_communication/utils.h>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>

@@ -1,7 +1,6 @@
 #include <hl_monitoring/drawers/pose_drawer.h>
 
 #include <hl_communication/utils.h>
-#include <hl_monitoring/utils.h>
 
 #include <opencv2/imgproc.hpp>
 

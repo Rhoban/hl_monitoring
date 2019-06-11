@@ -2,6 +2,8 @@
 
 #include <hl_communication/utils.h>
 
+using namespace hl_communication;
+
 namespace hl_monitoring
 {
 ImageProvider::ImageProvider() : index(-1), nb_frames(0)

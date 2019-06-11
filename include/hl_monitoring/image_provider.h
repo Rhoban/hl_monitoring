@@ -66,6 +66,7 @@ public:
   virtual void setIntrinsic(const hl_communication::IntrinsicParameters& params);
   virtual void setDefaultPose(const hl_communication::Pose3D& pose);
   virtual void setPose(int frame_idx, const hl_communication::Pose3D& pose);
+  virtual void setExternalName(const std::string& source_name);
 
   /**
    * Set the offset in us between steady_clock and system_clock (time_since_epoch)

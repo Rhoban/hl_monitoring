@@ -7,7 +7,6 @@
 
 #include <hl_communication/utils.h>
 #include <hl_monitoring/replay_image_provider.h>
-#include <hl_monitoring/utils.h>
 
 #include <opencv2/opencv.hpp>
 #include <tclap/CmdLine.h>

@@ -7,7 +7,6 @@
 #include <hl_communication/utils.h>
 #include <hl_monitoring/field.h>
 #include <hl_monitoring/monitoring_manager.h>
-#include <hl_monitoring/utils.h>
 #include <hl_monitoring/drawers/team_drawer.h>
 
 #include <opencv2/imgproc.hpp>

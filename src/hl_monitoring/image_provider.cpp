@@ -53,6 +53,11 @@ void ImageProvider::setPose(int frame_idx, const Pose3D& pose)
   meta_information.mutable_frames(frame_idx)->mutable_pose()->CopyFrom(pose);
 }
 
+void ImageProvider::setExternalName(const std::string& source_name)
+{
+  meta_information.mutable_source_id()->set_external_source(source_name);
+}
+
 void ImageProvider::setOffset(int64 offset)
 {
   meta_information.set_time_offset(offset);

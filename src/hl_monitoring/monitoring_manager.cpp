@@ -228,6 +228,10 @@ void MonitoringManager::addImageProvider(const std::string& name, std::unique_pt
     throw std::logic_error("Failed to add Image Provider: '" + name + "' already in collection");
   }
   image_providers[name] = std::move(image_provider);
+  if (live)
+  {
+    image_providers[name]->setExternalName(name);
+  }
 }
 
 void MonitoringManager::update()

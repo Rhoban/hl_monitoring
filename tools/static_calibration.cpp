@@ -9,7 +9,6 @@
 #include <hl_monitoring/manual_pose_solver.h>
 #include <hl_monitoring/replay_image_provider.h>
 #include <hl_monitoring/replay_viewer.h>
-#include <hl_monitoring/utils.h>
 
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
@@ -18,6 +17,7 @@
 
 #include <fstream>
 
+using namespace hl_communication;
 using namespace hl_monitoring;
 
 class CalibrationViewer : public ReplayViewer

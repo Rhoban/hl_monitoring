@@ -34,6 +34,11 @@ ReplayViewer::ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, 
   addBinding('b', "Set playing direction to backward", [this]() { this->setSpeed(-std::fabs(this->speed)); });
   addBinding('f', "Set playing direction to forward", [this]() { this->setSpeed(std::fabs(this->speed)); });
   // TODO: add mouse handler
+  cv::setMouseCallback(window_name,
+                       [](int event, int x, int y, int flags, void* ptr) -> void {
+                         ((ReplayViewer*)ptr)->treatMouseEvent(event, x, y, flags);
+                       },
+                       this);
 }
 
 ReplayViewer::~ReplayViewer()
@@ -79,6 +84,14 @@ void ReplayViewer::printHelp()
   {
     std::cout << "'" << entry.first << "':\t" << entry.second.help_msg << std::endl;
   }
+}
+
+void ReplayViewer::treatMouseEvent(int event, int x, int y, int flags)
+{
+  (void)event;
+  (void)x;
+  (void)y;
+  (void)flags;
 }
 
 void ReplayViewer::step()

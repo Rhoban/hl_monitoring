@@ -49,7 +49,7 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
   nb_frames = meta_information.frames_size();
   for (int idx = 0; idx < nb_frames; idx++)
   {
-    uint64_t time_stamp = getTS(meta_information.frames(idx), false);
+    uint64_t time_stamp = getTS(meta_information.frames(idx), true);
     if (indices_by_time_stamp.count(time_stamp) > 0)
     {
       throw std::runtime_error(HL_DEBUG + "Duplicated time_stamp " + std::to_string(time_stamp));

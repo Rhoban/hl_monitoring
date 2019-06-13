@@ -36,6 +36,8 @@ protected:
   void setSpeed(double speed);
   void printHelp();
 
+  virtual void treatMouseEvent(int event, int x, int y, int flags);
+
   struct Action
   {
     std::function<void()> callback;

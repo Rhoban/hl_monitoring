@@ -101,16 +101,18 @@ cv::Mat OpenCVImageProvider::getNextImg()
 {
   input.read(img);
 
-  uint64_t time_stamp = hl_communication::getTimeStamp();
+  uint64_t monotonic_ts = hl_communication::getTimeStamp();
+  uint64_t utc_ts = hl_communication::getUTCTimeStamp();
   if (img.empty())
   {
     throw std::runtime_error(HL_DEBUG + "Blank frame at frame: " + std::to_string(index) + "/" +
                              std::to_string(nb_frames));
   }
   // register image
-  pushTimeStamp(index, time_stamp);
+  pushTimeStamp(index, monotonic_ts);
   FrameEntry* entry = meta_information.add_frames();
-  entry->set_time_stamp(time_stamp);
+  entry->set_utc_ts(utc_ts);
+  entry->set_monotonic_ts(monotonic_ts);
   index++;
   nb_frames++;
   // Write image to output video if opened

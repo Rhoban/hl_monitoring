@@ -25,8 +25,6 @@ int main(int argc, char** argv)
                                         "path", cmd);
   TCLAP::ValueArg<std::string> output_arg("o", "output", "The output path for the meta_information", true,
                                           "meta_information.bin", "path", cmd);
-  TCLAP::ValueArg<double> dt_arg("t", "step_time", "The interval between two frames when a video is provided", false,
-                                 0.03, "seconds", cmd);
   TCLAP::SwitchArg force_switch("f", "force", "Allows to overwrite existing data in meta-information", cmd, false);
   try
   {
@@ -72,14 +70,8 @@ int main(int argc, char** argv)
                                           " use -f to overwrite");
     }
     ReplayImageProvider video(video_arg.getValue());
-    double dt = dt_arg.getValue();
-    int nb_frames = video.getNbFrames();
-    information.clear_frames();
-    for (int i = 0; i < nb_frames; i++)
-    {
-      uint64 time_stamp = dt * i * 1000 * 1000;
-      information.add_frames()->set_time_stamp(time_stamp);
-    }
+    video.setDefaultMetaInformation();
+    information = video.getMetaInformation();
   }
 
   writeToFile(output_arg.getValue(), information);

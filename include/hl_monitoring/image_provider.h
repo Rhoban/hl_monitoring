@@ -123,12 +123,12 @@ protected:
   hl_communication::VideoMetaInformation meta_information;
 
   /**
-   * Provide access to indices based on steady_clock time_stamps
+   * Provide access to indices based on monotonic time_stamps
    */
   std::map<uint64_t, int> indices_by_time_stamp;
 
   /**
-   * Provide access to steady_clock time_stamp based on index
+   * Provide access to monotonic time_stamp based on index
    */
   std::map<int, uint64_t> time_stamp_by_index;
 

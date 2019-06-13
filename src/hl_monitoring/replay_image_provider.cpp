@@ -49,7 +49,7 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
   nb_frames = meta_information.frames_size();
   for (int idx = 0; idx < nb_frames; idx++)
   {
-    uint64_t time_stamp = meta_information.frames(idx).time_stamp();
+    uint64_t time_stamp = getTS(meta_information.frames(idx), false);
     if (indices_by_time_stamp.count(time_stamp) > 0)
     {
       throw std::runtime_error(HL_DEBUG + "Duplicated time_stamp " + std::to_string(time_stamp));
@@ -62,13 +62,16 @@ void ReplayImageProvider::setDefaultMetaInformation()
 {
   double fps = video.get(cv::CAP_PROP_FPS);
   uint64_t dt = std::pow(10, 6) / fps;
-  uint64_t ts = 0;
+  uint64_t monotonic_ts = 0;
+  uint64_t utc_ts = getUTCTimeStamp();  // When setting default meta-information, use current date
   for (int idx = 0; idx < nb_frames; idx++)
   {
     FrameEntry* frame = meta_information.add_frames();
-    frame->set_time_stamp(ts);
-    ts += dt;
-    pushTimeStamp(idx, ts);
+    frame->set_monotonic_ts(monotonic_ts);
+    monotonic_ts += dt;
+    frame->set_utc_ts(utc_ts);
+    utc_ts += dt;
+    pushTimeStamp(idx, monotonic_ts);
   }
 }
 

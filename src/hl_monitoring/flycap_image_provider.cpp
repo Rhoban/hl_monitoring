@@ -179,7 +179,8 @@ cv::Mat FlyCapImageProvider::getNextImg()
     }
   }
 
-  uint64_t time_stamp = hl_communication::getTimeStamp();
+  uint64_t monotonic_ts = hl_communication::getTimeStamp();
+  uint64_t utc_ts = hl_communication::getUTCTimeStamp();
 
   unsigned int bytes_per_row = fc_image.GetReceivedDataSize() / fc_image.GetRows();
   cv::Mat tmp_img = cv::Mat(fc_image.GetRows(), fc_image.GetCols(), CV_8UC3, fc_image.GetData(), bytes_per_row).clone();
@@ -190,9 +191,10 @@ cv::Mat FlyCapImageProvider::getNextImg()
   }
   cv::cvtColor(tmp_img, img, cv::COLOR_RGB2BGR);
   // register image
-  pushTimeStamp(index, time_stamp);
+  pushTimeStamp(index, monotonic_ts);
   FrameEntry* entry = meta_information.add_frames();
-  entry->set_time_stamp(time_stamp);
+  entry->set_utc_ts(utc_ts);
+  entry->set_monotonic_ts(monotonic_ts);
   index++;
   nb_frames++;
   // Open output stream after capturing first image

@@ -26,7 +26,6 @@ public:
    */
   virtual void paintImg();
 
-protected:
   virtual void updateTime();
   /**
    * Throws a logic_error if the key is already included

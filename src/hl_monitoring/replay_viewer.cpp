@@ -56,13 +56,9 @@ void ReplayViewer::run()
     paintImg();
     cv::imshow(window_name, display_img);
     uint64_t end = getTimeStamp();
-    int wait_time_ms = 0;
-    if (playing)
-    {
-      int elapsed_ms = (end - start) / 1000;
-      wait_time_ms = std::max(5, 33 - elapsed_ms);  // 30 fps as default display
-    }
-    int key(255);  // Default value when no key is pressed
+    int elapsed_ms = (end - start) / 1000;
+    int wait_time_ms = std::max(5, 33 - elapsed_ms);  // 30 fps as default display
+    int key(255);                                     // Default value when no key is pressed
     key = cv::waitKey(wait_time_ms);
     if (key != 255)
     {

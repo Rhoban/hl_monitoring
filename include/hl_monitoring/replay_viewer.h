@@ -43,6 +43,9 @@ public:
     std::string help_msg;
   };
 
+  hl_communication::VideoMetaInformation getMetaInformation() const;
+  hl_communication::VideoSourceID getSourceId() const;
+
   /**
    * The source of the images
    */

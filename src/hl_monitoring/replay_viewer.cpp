@@ -90,6 +90,16 @@ void ReplayViewer::treatMouseEvent(int event, int x, int y, int flags)
   (void)flags;
 }
 
+hl_communication::VideoMetaInformation ReplayViewer::getMetaInformation() const
+{
+  return provider->getMetaInformation();
+}
+
+hl_communication::VideoSourceID ReplayViewer::getSourceId() const
+{
+  return getMetaInformation().source_id();
+}
+
 void ReplayViewer::step()
 {
   calibrated_img = provider->getCalibratedImage(now);

@@ -27,12 +27,42 @@ FlyCapImageProvider::FlyCapImageProvider(const Json::Value& v, const std::string
   readVal(v, "frame_rate", &frame_rate);
   readVal(v, "shutter", &shutter);
   readVal(v, "gain", &gain);
+  if (v.isMember("guid"))
+  {
+    const Json::Value& guid_value = v["guid"];
+    if (guid_value.size() != 4)
+    {
+      throw std::runtime_error(HL_DEBUG + "Invalid size for 'guid': " + std::to_string(guid_value.size()));
+    }
+    for (Json::ArrayIndex idx = 0; idx < 4; idx++)
+    {
+      guid.value[idx] = guid_value[idx].asUInt();
+    }
+    has_guid = true;
+  }
   openInputStream();
   getNextImg();
 }
 FlyCapImageProvider::~FlyCapImageProvider()
 {
   saveVideoMetaInformation();
+}
+
+void FlyCapImageProvider::connect()
+{
+  FlyCapture2::Error error;
+  if (has_guid)
+  {
+    error = camera.Connect(&guid);
+  }
+  else
+  {
+    error = camera.Connect(0);
+  }
+  if (error != FlyCapture2::PGRERROR_OK)
+  {
+    throw PtGreyConnectionException(HL_DEBUG + "Failed to connect to camera");
+  }
 }
 
 void FlyCapImageProvider::reconnectCamera()
@@ -43,12 +73,7 @@ void FlyCapImageProvider::reconnectCamera()
   {
     camera.Disconnect();
   }
-  // Connect to camera
-  error = camera.Connect(0);
-  if (error != FlyCapture2::PGRERROR_OK)
-  {
-    throw PtGreyConnectionException(HL_DEBUG + "Failed to connect to camera");
-  }
+  connect();
 }
 
 void FlyCapImageProvider::openInputStream()
@@ -59,12 +84,7 @@ void FlyCapImageProvider::openInputStream()
   {
     camera.Disconnect();
   }
-  // Connect to camera
-  error = camera.Connect(0);
-  if (error != FlyCapture2::PGRERROR_OK)
-  {
-    throw PtGreyConnectionException(HL_DEBUG + "failed to connect to camera: " + error.GetDescription());
-  }
+  connect();
   try
   {
     // Properly set up size of packet and delay between packets

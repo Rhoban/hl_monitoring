@@ -33,6 +33,7 @@ public:
   FlyCapImageProvider(const Json::Value& v, const std::string& output_prefix = "");
   virtual ~FlyCapImageProvider();
 
+  void connect();
   /**
    * Cut current connection if active, then start a new connection
    */
@@ -133,6 +134,16 @@ private:
    * then no files are written
    */
   std::string output_prefix;
+
+  /**
+   * General unique identifier of the camera
+   */
+  FlyCapture2::PGRGuid guid;
+
+  /**
+   * Is guid provided?
+   */
+  bool has_guid;
 };
 
 }  // namespace hl_monitoring

@@ -59,35 +59,12 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
       // Calculate the size of the minor and major axes
       float halfmajoraxissize = intervalConfianceRatio * sqrt(eigenvalues.at<float>(0));
       float halfminoraxissize = intervalConfianceRatio * sqrt(eigenvalues.at<float>(1));
+      std::pair<float, float> axes(halfmajoraxissize, halfminoraxissize);
+      int nbPoint = 100;
 
       std::vector<cv::Point> ellipsePoints;
-      double maxDistAxe = 0;
-      double minDistAxe = 0;
 
-      int nbPoint = 36;
-      for (int i = 0; i < nbPoint; i++)
-      {
-        float x, y;
-        x = halfmajoraxissize * cos(360 / nbPoint * i) * cos(angle) -
-            halfminoraxissize * sin(360 / nbPoint * i) * sin(angle) + pos.x();
-        y = halfmajoraxissize * cos(360 / nbPoint * i) * sin(angle) +
-            halfminoraxissize * sin(360 / nbPoint * i) * cos(angle) + pos.y();
-
-        cv::Point2f img_pos_ellipse;
-        cv::Point3f ellipse_pos(x, y, 0);
-        bool valid_pos_ellipse = converter(ellipse_pos, &img_pos_ellipse);
-
-        if (valid_pos_ellipse)
-        {
-          ellipsePoints.push_back(img_pos_ellipse);
-
-          // finding major and minor axes for our ellipse after projection on the image
-          if (cv::norm(img_pos_ellipse - img_pos) > maxDistAxe)
-            maxDistAxe = cv::norm(img_pos_ellipse - img_pos);
-          if (cv::norm(img_pos_ellipse - img_pos) < minDistAxe || minDistAxe == 0)
-            minDistAxe = cv::norm(img_pos_ellipse - img_pos);
-        }
-      }
+      getEllipsePoint(converter, field_pos, nbPoint, angle, axes, 0, 2 * M_PI, &ellipsePoints);
 
       cv::RotatedRect ellipse = fitEllipse(ellipsePoints);
       cv::ellipse(overlay, ellipse, color, CV_FILLED, cv::LINE_AA);
@@ -95,17 +72,21 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
       if (pose.has_dir() && pose.dir().has_std_dev())
       {
         double dir_rad = pose.dir().mean();
-        if (dir_rad < 0)
-          dir_rad += M_PI * 2;
-        double dir_deg = 180 * dir_rad / M_PI;
-
         double std_dev_rad = pose.dir().std_dev();
-        double std_dev_deg = 180 * std_dev_rad / M_PI;
 
-        double offset = intervalConfianceRatio * std_dev_deg;
+        if (std_dev_rad < M_PI / 2)
+        {
+          double offset = intervalConfianceRatio * std_dev_rad;
+          float cone_dir_min = dir_rad - offset;
+          float cone_dir_max = dir_rad + offset;
 
-        cv::ellipse(overlay, img_pos, cv::Size2f(maxDistAxe, minDistAxe), angle, -dir_deg - offset, -dir_deg + offset,
-                    color * 1.5, CV_FILLED, cv::LINE_AA);
+          std::vector<cv::Point> dirPoints;
+          getEllipsePoint(converter, field_pos, nbPoint, angle, axes, cone_dir_min, cone_dir_max, &dirPoints);
+
+          dirPoints.push_back(img_pos);
+
+          cv::fillConvexPoly(overlay, dirPoints, color * 1.5, cv::LINE_AA);
+        }
       }
 
       double max_opacity = 0.9;
@@ -136,6 +117,27 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
           cv::line(*out, img_pos, img_arrow_end, color * 1.5, thickness, cv::LINE_AA);
         }
       }
+    }
+  }
+}  // namespace hl_monitoring
+
+void PoseDrawer::getEllipsePoint(FieldToImgConverter converter, cv::Point3f field_pos, int nbPoints,
+                                 double angle_ellipse, std::pair<float, float> axes, double start_angle,
+                                 double end_angle, std::vector<cv::Point>* ellipsePoints)
+{
+  for (float i = start_angle - angle_ellipse; i < end_angle - angle_ellipse; i += (M_PI * 2) / nbPoints)
+  {
+    float x, y;
+    x = axes.first * cos(i) * cos(angle_ellipse) - axes.second * sin(i) * sin(angle_ellipse) + field_pos.x;
+    y = axes.first * cos(i) * sin(angle_ellipse) + axes.second * sin(i) * cos(angle_ellipse) + field_pos.y;
+
+    cv::Point2f img_pos_ellipse;
+    cv::Point3f ellipse_pos(x, y, 0);
+    bool valid_pos_ellipse = converter(ellipse_pos, &img_pos_ellipse);
+
+    if (valid_pos_ellipse)
+    {
+      ellipsePoints->push_back(img_pos_ellipse);
     }
   }
 }

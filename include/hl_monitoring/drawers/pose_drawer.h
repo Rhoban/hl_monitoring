@@ -10,12 +10,16 @@ public:
   PoseDrawer();
   ~PoseDrawer();
   void draw(FieldToImgConverter converter, const hl_communication::PoseDistribution& data, cv::Mat* out) override;
+  void getEllipsePoint(FieldToImgConverter converter, cv::Point3f field_pos, int nbPoints, double angle_ellipse,
+                       std::pair<float, float> axes, double start_angle, double end_angle,
+                       std::vector<cv::Point>* ellipsePoints);
   Json::Value toJson() const override;
   void fromJson(const Json::Value& v) override;
 
   void setColor(const cv::Scalar& new_color);
 
   void setRadius(double new_radius);
+
 private:
   /**
    * Radius of the circle used for the position, also used for direction indicator [px]

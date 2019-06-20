@@ -23,9 +23,12 @@ int main(int argc, char** argv)
                                         false, "", "path", cmd);
   TCLAP::ValueArg<std::string> pose_arg("p", "pose", "Path to the file describing the pose of the camera", false, "",
                                         "path", cmd);
-  TCLAP::ValueArg<std::string> output_arg("o", "output", "The output path for the meta_information", true,
+  TCLAP::ValueArg<std::string> output_arg("o", "output", "The output path for the meta_information", false,
                                           "meta_information.bin", "path", cmd);
   TCLAP::SwitchArg force_switch("f", "force", "Allows to overwrite existing data in meta-information", cmd, false);
+  TCLAP::SwitchArg show_id_arg("", "show-id", "Show id from meta-information", cmd);
+  TCLAP::SwitchArg guess_start_arg("", "guess-start",
+                                   "Use first frame of meta-information to guess the start of the video", cmd);
   try
   {
     cmd.parse(argc, argv);
@@ -38,7 +41,8 @@ int main(int argc, char** argv)
 
   VideoMetaInformation information;
 
-  bool force = force_switch.getValue();
+  // Allow to overwrite initial object only if explicit or if no file will be written
+  bool modification_allowed = force_switch.getValue() || !output_arg.isSet();
 
   if (meta_arg.getValue() != "")
   {
@@ -46,7 +50,7 @@ int main(int argc, char** argv)
   }
   if (pose_arg.getValue() != "")
   {
-    if (!force && information.has_default_pose())
+    if (!modification_allowed && information.has_default_pose())
     {
       throw std::runtime_error(HL_DEBUG + "video meta information already contains default pose."
                                           " use -f to overwrite");
@@ -55,7 +59,7 @@ int main(int argc, char** argv)
   }
   if (intrinsic_arg.getValue() != "")
   {
-    if (!force && information.has_camera_parameters())
+    if (!modification_allowed && information.has_camera_parameters())
     {
       throw std::runtime_error(HL_DEBUG + "video meta information already contains camera_parameters."
                                           " use -f to overwrite");
@@ -64,7 +68,7 @@ int main(int argc, char** argv)
   }
   if (video_arg.getValue() != "")
   {
-    if (!force && information.frames_size() > 0)
+    if (!modification_allowed && information.frames_size() > 0)
     {
       throw std::runtime_error(HL_DEBUG + "video meta information already contains frame entries."
                                           " use -f to overwrite");
@@ -73,6 +77,28 @@ int main(int argc, char** argv)
     video.setDefaultMetaInformation();
     information = video.getMetaInformation();
   }
-
-  writeToFile(output_arg.getValue(), information);
+  if (guess_start_arg.getValue())
+  {
+    VideoSourceID* source = information.mutable_source_id();
+    if (source->has_utc_start())
+      throw std::logic_error(HL_DEBUG + " source has already a start specified");
+    else if (information.frames_size() == 0)
+      throw std::logic_error(HL_DEBUG + " no frames available");
+    source->set_utc_start(information.frames(0).utc_ts());
+  }
+  if (show_id_arg.getValue())
+  {
+    if (information.has_source_id())
+    {
+      std::cout << "Source id: " << information.source_id() << std::endl;
+    }
+    else
+    {
+      std::cout << "Meta info has no id" << std::endl;
+    }
+  }
+  if (output_arg.isSet())
+  {
+    writeToFile(output_arg.getValue(), information);
+  }
 }

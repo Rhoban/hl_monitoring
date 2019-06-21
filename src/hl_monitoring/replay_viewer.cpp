@@ -78,8 +78,19 @@ void ReplayViewer::printHelp()
 {
   for (const auto& entry : key_bindings)
   {
-    std::cout << "'" << entry.first << "':\t" << entry.second.help_msg << std::endl;
+    std::cout << "'" << keyCode2Str(entry.first) << "':\t" << entry.second.help_msg << std::endl;
   }
+}
+
+std::string ReplayViewer::keyCode2Str(int key)
+{
+  if (key <= 255)
+  {
+    std::string result;
+    result = (char)key;
+    return result;
+  }
+  return std::to_string(key);
 }
 
 void ReplayViewer::treatMouseEvent(int event, int x, int y, int flags)

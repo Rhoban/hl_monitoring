@@ -35,6 +35,8 @@ public:
   void setSpeed(double speed);
   void printHelp();
 
+  std::string keyCode2Str(int key);
+
   virtual void treatMouseEvent(int event, int x, int y, int flags);
 
   struct Action

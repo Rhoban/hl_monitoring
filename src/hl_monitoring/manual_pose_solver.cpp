@@ -124,19 +124,22 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
       field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 1.0, 30);
     }
 
+    int font = cv::FONT_HERSHEY_PLAIN;
+    float text_scale = 1.5;
+    int text_thickness = 1;
     cv::Scalar text_color = cv::Scalar(255, 0, 255);
+    int line_type = cv::LINE_AA;
+    cv::Point text_pos(0, display_img.rows - 20);
     if (point_index >= (int)points_in_world.size())
     {
-      cv::putText(display_img, "All points have been tagged", cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0,
-                  text_color, 2);
+      cv::putText(display_img, "All points have been tagged", text_pos, font, text_scale, text_color, text_thickness,
+                  line_type);
     }
     else
     {
-      std::string line1 = "Click on: " + points_names[point_index];
-      std::ostringstream line2;
-      line2 << "(world pos: " << points_in_world[point_index] << ")";
-      cv::putText(display_img, line1, cv::Point(0, 30), cv::FONT_HERSHEY_SIMPLEX, 1.0, text_color, 2);
-      cv::putText(display_img, line2.str(), cv::Point(0, 70), cv::FONT_HERSHEY_SIMPLEX, 1.0, text_color, 2);
+      std::ostringstream line;
+      line << "Click on: " << points_names[point_index] << " at " << points_in_world[point_index] << ")";
+      cv::putText(display_img, line.str(), text_pos, font, text_scale, text_color, text_thickness, line_type);
     }
 
     cv::imshow("manual_pose_solver", display_img);

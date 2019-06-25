@@ -115,14 +115,18 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
   while (!exit)
   {
     cv::Mat display_img = calibration_img.clone();
+    cv::Mat drawing_img = display_img.clone();
+    cv::Scalar drawing_color(255, 0, 255);
     for (const auto& entry : points_in_img)
     {
-      cv::circle(display_img, entry.second, 5, cv::Scalar(0, 0, 0), -1);
+      cv::drawMarker(drawing_img, entry.second, drawing_color, cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
     }
     if (points_in_img.size() >= 4)
     {
-      field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &display_img, cv::Scalar(0, 0, 0), 1.0, 30);
+      field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &drawing_img, drawing_color, 2.0, 30);
     }
+    double drawing_alpha = 0.3;
+    cv::addWeighted(drawing_img, drawing_alpha, display_img, 1 - drawing_alpha, 0, display_img);
 
     int font = cv::FONT_HERSHEY_PLAIN;
     float text_scale = 1.5;

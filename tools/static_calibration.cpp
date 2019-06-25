@@ -58,17 +58,15 @@ int main(int argc, char** argv)
                      "parameters",
                      ' ', "0.9");
 
-  TCLAP::ValueArg<std::string> video_arg("v", "video", "The path to the video", true, "video.avi", "string");
-  TCLAP::ValueArg<std::string> output_arg("o", "output", "The output path for the pose of the camera", true, "pose.bin",
-                                          "string");
+  TCLAP::ValueArg<std::string> video_arg("v", "video", "The path to the video", true, "video.avi", "string", cmd);
+  TCLAP::ValueArg<std::string> output_arg("o", "output", "The output path for the pose of the camera", true, "pose.pb",
+                                          "string", cmd);
   TCLAP::ValueArg<std::string> intrinsic_arg("i", "intrinsic", "Path to the file containing the intrinsic parameters",
-                                             true, "intrinsic.bin", "string");
+                                             true, "intrinsic.pb", "string", cmd);
   TCLAP::ValueArg<std::string> field_arg("f", "field", "The path to the field file containing the dimensions", false,
-                                         "field.json", "string");
-  cmd.add(video_arg);
-  cmd.add(output_arg);
-  cmd.add(intrinsic_arg);
-  cmd.add(field_arg);
+                                         "field.json", "string", cmd);
+  TCLAP::ValueArg<std::string> pose_arg("p", "pose", "The path to the file containing an initial pose", false,
+                                        "pose.pb", "string", cmd);
 
   try
   {
@@ -96,6 +94,10 @@ int main(int argc, char** argv)
   }
 
   CalibrationViewer calibration(std::move(provider), field, intrinsic);
+  if (pose_arg.isSet())
+  {
+    hl_communication::readFromFile(pose_arg.getValue(), &calibration.pose);
+  }
   calibration.run();
   if (calibration.has_calib)
   {

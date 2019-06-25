@@ -109,7 +109,7 @@ void ManualPoseSolver::onClick(int event, int x, int y, void* param)
 }
 
 // Main loop
-bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
+bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_guess)
 {
   bool exit = false;
   while (!exit)
@@ -117,6 +117,12 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
     cv::Mat display_img = calibration_img.clone();
     cv::Mat drawing_img = display_img.clone();
     cv::Scalar drawing_color(255, 0, 255);
+    cv::Scalar guess_color(0, 0, 0);
+    if (has_guess)
+    {
+      field.tagLines(camera_matrix, distortion_coefficients, *rvec_out, *tvec_out, &drawing_img, guess_color, 2.0, 30);
+      tryDrawHelper(*rvec_out, *tvec_out, guess_color, &drawing_img);
+    }
     for (const auto& entry : points_in_img)
     {
       cv::drawMarker(drawing_img, entry.second, drawing_color, cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
@@ -124,6 +130,7 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
     if (points_in_img.size() >= 4)
     {
       field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &drawing_img, drawing_color, 2.0, 30);
+      tryDrawHelper(rvec, tvec, drawing_color, &drawing_img);
     }
     double drawing_alpha = 0.3;
     cv::addWeighted(drawing_img, drawing_alpha, display_img, 1 - drawing_alpha, 0, display_img);
@@ -179,7 +186,14 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out)
 bool ManualPoseSolver::solve(Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches)
 {
   cv::Mat loc_rvec, loc_tvec;
-  bool success = solve(&loc_rvec, &loc_tvec);
+  bool has_guess = false;
+  if (pose->rotation_size() > 0 && pose->translation_size() > 0)
+  {
+    std::cout << "using guess" << std::endl;
+    pose3DToCV(*pose, &loc_rvec, &loc_tvec);
+    has_guess = true;
+  }
+  bool success = solve(&loc_rvec, &loc_tvec, has_guess);
   if (matches != nullptr)
   {
     exportMatches(matches);
@@ -190,6 +204,20 @@ bool ManualPoseSolver::solve(Pose3D* pose, std::vector<hl_communication::Match2D
     return true;
   }
   return false;
+}
+
+void ManualPoseSolver::tryDrawHelper(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Scalar& color, cv::Mat* img)
+{
+  if (point_index >= (int)points_in_world.size())
+    return;
+  cv::Point3f world_pos = points_in_world[point_index];
+  if (fieldToCamera(world_pos, rvec, tvec).z >= 0)
+  {
+    std::vector<cv::Point3f> object_points = { world_pos };
+    std::vector<cv::Point2f> img_points;
+    cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coefficients, img_points);
+    cv::circle(*img, img_points[0], 10, color, 3, cv::LINE_AA);
+  }
 }
 
 }  // namespace hl_monitoring

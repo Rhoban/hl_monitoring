@@ -18,7 +18,13 @@ public:
                    const Field& field);
   ~ManualPoseSolver();
 
-  bool solve(cv::Mat* rvec, cv::Mat* tvec);
+  /**
+   * Solve pose by user interaction, if 'has_guess' is provided, then rvec and tvec are used as initial guesses
+   */
+  bool solve(cv::Mat* rvec, cv::Mat* tvec, bool has_guess = false);
+  /**
+   * If provided pose is not an empty message, use it as an initial guess
+   */
   bool solve(hl_communication::Pose3D* pose, std::vector<hl_communication::Match2D3DMsg>* matches = nullptr);
 
   static bool solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
@@ -28,6 +34,10 @@ public:
                         const hl_communication::IntrinsicParameters& camera_parameters, hl_communication::Pose3D* pose);
 
 private:
+  /**
+   * Draw an helper on img to indicate the next point required if applicable
+   */
+  void tryDrawHelper(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Scalar& color, cv::Mat* img);
   void updatePose();
   void exportMatches(std::vector<hl_communication::Match2D3DMsg>* matches);
   void onClick(int event, int x, int y, void* param);

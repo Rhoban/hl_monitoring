@@ -101,6 +101,7 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
   }
   else
   {
+    cv::Point3f pos_in_field(pos.x(), pos.y(), 0);
     drawGroundCircle(out, converter, cv::Point2f(pos.x(), pos.y()), circle_radius, color, thickness);
     if (pose.has_dir())
     {
@@ -111,6 +112,20 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
       bool valid_end = converter(field_arrow_end, &img_end);
       if (valid_end)
         cv::line(*out, img_pos, img_end, color, thickness, cv::LINE_AA);
+    }
+    else
+    {
+      // Drawing a projected cross
+      for (double angle : { M_PI / 4, 3 * M_PI / 4 })
+      {
+        cv::Point3f offset = cv::Point3f(cos(angle), sin(angle), 0) * circle_radius;
+        cv::Point3f start_field = pos_in_field - offset;
+        cv::Point3f end_field = pos_in_field + offset;
+        cv::Point2f img_start, img_end;
+        bool success = converter(start_field, &img_start) && converter(end_field, &img_end);
+        if (success)
+          cv::line(*out, img_start, img_end, color, thickness, cv::LINE_AA);
+      }
     }
   }
 }

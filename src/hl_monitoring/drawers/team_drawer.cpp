@@ -37,12 +37,15 @@ void TeamDrawer::draw(FieldToImgConverter converter, const hl_communication::Mes
     for (const RobotMsg& msg : entry.second)
     {
       uint32_t robot_id = msg.robot_id().robot_id();
-      if (player_focus >= 0 && (int)robot_id != player_focus)
+      bool has_player_focus = (int)robot_id == player_focus;
+      if (player_focus >= 0 && !has_player_focus)
       {
         continue;
       }
       if (!isPenalized(status.gc_message, team_id, robot_id))
       {
+        player_drawer.setBallDrawing(has_player_focus);
+        player_drawer.setOpponentsDrawing(has_player_focus);
         player_drawer.draw(converter, msg, out);
         if (msg.has_captain())
         {

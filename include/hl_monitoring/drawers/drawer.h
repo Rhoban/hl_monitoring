@@ -14,17 +14,17 @@ namespace hl_monitoring
 {
 class TopViewDrawer;
 
+/**
+ * The contract of a field to image converter is to convert a field_pos to an img_pos.
+ * If the img_pos is outside of the image or if the point is behind the camera, 'false' is returned,
+ * on success, 'true' is returned.
+ */
+typedef std::function<bool(const cv::Point3f& field_pos, cv::Point2f* img_pos)> FieldToImgConverter;
+
 template <class T>
 class Drawer
 {
 public:
-  /**
-   * The contract of a field to image converter is to convert a field_pos to an img_pos.
-   * If the img_pos is outside of the image or if the point is behind the camera, 'false' is returned,
-   * on success, 'true' is returned.
-   */
-  typedef std::function<bool(const cv::Point3f& field_pos, cv::Point2f* img_pos)> FieldToImgConverter;
-
   Drawer()
   {
   }

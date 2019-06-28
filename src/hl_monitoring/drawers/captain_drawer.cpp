@@ -8,8 +8,8 @@ namespace hl_monitoring
 {
 CaptainDrawer::CaptainDrawer()
 {
-  ball_drawer.setRadius(7);
-  opponent_drawer.setRadius(30);
+  ball_drawer.setRadius(0.07);
+  opponent_drawer.setRadius(0.25);
 }
 
 CaptainDrawer::~CaptainDrawer()

@@ -1,14 +1,20 @@
 #include <hl_monitoring/drawers/player_drawer.h>
 
+#include <hl_monitoring/drawers/geometry.h>
+
+#include <hl_communication/perception.pb.h>
 #include <hl_communication/utils.h>
 
 #include <opencv2/imgproc.hpp>
+
+#include <iostream>
 
 using namespace hl_communication;
 
 namespace hl_monitoring
 {
-PlayerDrawer::PlayerDrawer() : target_drawer(ArrowDrawer::ArrowCross, 1.0), color(0, 0, 0)
+PlayerDrawer::PlayerDrawer()
+  : target_drawer(ArrowDrawer::ArrowCross, 1.0), color(0, 0, 0), ball_enabled(false), opponents_enabled(false)
 {
 }
 
@@ -23,14 +29,11 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
     const Perception& perception = robot.perception();
     if (perception.self_in_field_size() > 0)
     {
-      // Currently only draw first pose
       for (int msg_idx = 0; msg_idx < perception.self_in_field_size(); msg_idx++)
       {
         const WeightedPose& weighted_pose = perception.self_in_field(msg_idx);
         const PoseDistribution& pose = weighted_pose.pose();
         pose_drawer.draw(converter, pose, out);
-
-        // pose_drawer.draw(converter, pose, out);
 
         const PositionDistribution& position = pose.position();
         cv::Point3f robot_pos(position.x(), position.y(), 0);
@@ -70,6 +73,30 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
           kick_drawer.draw(converter, { kick_src_in_field, kick_target_in_field }, out);
         }
       }
+      // Drawing self balls
+      if (ball_enabled && perception.has_ball_in_self())
+      {
+        cv::Point3f ball_in_field = fieldFromSelf(perception.ball_in_self(), pose);
+        double ball_radius = 0.07;  // [m]
+        drawGroundDisk(out, converter, cv::Point2f(ball_in_field.x, ball_in_field.y), ball_radius,
+                       cv::Scalar(0, 0, 255));
+      }
+      // Drawing other robots
+      if (opponents_enabled)
+      {
+        for (const WeightedRobotPose& robot_weighted_pose : perception.robots())
+        {
+          const PoseDistribution& robot_pose_in_self = robot_weighted_pose.robot().robot_in_self();
+          const PositionDistribution& robot_pos_in_self = robot_pose_in_self.position();
+          cv::Point3f robot_in_field = fieldFromSelf(robot_pos_in_self, pose);
+          double opp_radius = 0.25;  // [m]
+          double min_alpha = 0;
+          double max_alpha = 0.7;
+          double alpha = robot_weighted_pose.probability() * (max_alpha - min_alpha) + min_alpha;
+          drawGroundDisk(out, converter, cv::Point2f(robot_in_field.x, robot_in_field.y), opp_radius,
+                         cv::Scalar(0, 0, 255), alpha);
+        }
+      }
     }
   }
 }
@@ -81,6 +108,16 @@ void PlayerDrawer::setColor(const cv::Scalar& new_color)
   name_drawer.setColor(new_color);
   target_drawer.setColor(new_color);
   kick_drawer.setColor(new_color);
+}
+
+void PlayerDrawer::setBallDrawing(bool enabled)
+{
+  ball_enabled = enabled;
+}
+
+void PlayerDrawer::setOpponentsDrawing(bool enabled)
+{
+  opponents_enabled = enabled;
 }
 
 Json::Value PlayerDrawer::toJson() const

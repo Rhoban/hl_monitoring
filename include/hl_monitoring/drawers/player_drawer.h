@@ -16,6 +16,10 @@ public:
   void fromJson(const Json::Value& v) override;
 
   void setColor(const cv::Scalar& new_color);
+
+  void setBallDrawing(bool enabled);
+  void setOpponentsDrawing(bool enabled);
+
 private:
   /**
    * Drawer used to tag robot position and direction
@@ -32,6 +36,10 @@ private:
   ArrowDrawer kick_drawer;
 
   cv::Scalar color;
+
+  bool ball_enabled;
+
+  bool opponents_enabled;
 };
 
 }  // namespace hl_monitoring

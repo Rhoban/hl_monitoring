@@ -22,7 +22,8 @@ public:
 
 private:
   /**
-   * Radius of the circle used for the position, also used for direction indicator [px]
+   * Radius of the circle used for position when uncertainty is not provide.
+   * It is also used for direction indicator [m]
    */
   double circle_radius;
 

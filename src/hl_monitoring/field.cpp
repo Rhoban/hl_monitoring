@@ -320,10 +320,13 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
     cv::projectPoints(field_positions, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
     for (size_t idx = 0; idx < field_positions.size(); idx++)
     {
-      cv::Point3f camera_pos = hl_communication::fieldToCamera(field_positions[idx], rvec, tvec);
-      if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))
+      if (isPointValidForCorrection(field_positions[idx], rvec, tvec, camera_matrix, distortion_coeffs))
       {
-        cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
+        cv::Point3f camera_pos = hl_communication::fieldToCamera(field_positions[idx], rvec, tvec);
+        if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))
+        {
+          cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
+        }
       }
     }
   }
@@ -374,6 +377,10 @@ void Field::tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coe
         continue;
       }
       std::vector<cv::Point2f> img_points;
+      if (not isPointValidForCorrection(object_points[0], rvec, tvec, camera_matrix, distortion_coeffs))
+        continue;
+      if (not isPointValidForCorrection(object_points[1], rvec, tvec, camera_matrix, distortion_coeffs))
+        continue;
       cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coeffs, img_points);
       // When point is outside of image, screw up the drawing
       cv::Rect2f img_rect(cv::Point(), tag_img->size());

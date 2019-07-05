@@ -16,9 +16,10 @@ public:
   void setColor(const cv::Scalar& new_color);
 
   void setRadius(double new_radius);
+
 private:
   /**
-   * Radius of the circle used for the position [px]
+   * Radius of the circle used to draw the position [m]
    */
   double circle_radius;
 

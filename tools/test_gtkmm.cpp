@@ -17,10 +17,10 @@ public:
     layout.add(button);
     layout.add(img_widget);
     add(layout);
-    img_widget.set_size_request(500, 600);
     button.show();
     img_widget.show();
     layout.show();
+    layout.set_size_request(500, 600);
   }
 
 private:

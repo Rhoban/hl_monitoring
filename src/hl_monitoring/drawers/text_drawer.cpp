@@ -16,13 +16,11 @@ TextDrawer::~TextDrawer()
 {
 }
 
-void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f, std::string>& data, cv::Mat* out)
+void TextDrawer::draw(FieldToImgConverter converter, const cv::Point3f& field_position, const std::string& msg,
+                      cv::Mat* out)
 {
-  cv::Point3f field_pos = data.first;
-  const std::string& msg = data.second;
   cv::Point2f img_pos;
-  bool valid = converter(field_pos, &img_pos);
-  if (valid)
+  if (converter(field_position, &img_pos))
   {
     img_pos += img_offset;
     int font_face = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX;
@@ -31,6 +29,16 @@ void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f
     cv::Point text_pos = img_pos + cv::Point2f(-text_size.width, text_size.height) / 2;
     cv::putText(*out, msg, text_pos, font_face, font_scale, color * 0.7, font_thickness, cv::LINE_AA);
   }
+}
+
+void TextDrawer::draw(FieldToImgConverter converter, const std::pair<cv::Point3f, std::string>& data, cv::Mat* out)
+{
+  draw(converter, data.first, data.second, out);
+}
+
+void TextDrawer::setFontScale(double new_font_scale)
+{
+  font_scale = new_font_scale;
 }
 
 void TextDrawer::setColor(const cv::Scalar& new_color)

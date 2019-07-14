@@ -4,19 +4,20 @@
 
 namespace hl_monitoring
 {
-
 /**
  * Can be used to draw text at a given position in field
  */
-class TextDrawer : public Drawer<std::pair<cv::Point3f,std::string>>
+class TextDrawer : public Drawer<std::pair<cv::Point3f, std::string>>
 {
 public:
   TextDrawer();
   ~TextDrawer();
-  void draw(FieldToImgConverter converter, const std::pair<cv::Point3f,std::string>& data, cv::Mat* out) override;
+  void draw(FieldToImgConverter converter, const cv::Point3f& field_position, const std::string& text, cv::Mat* out);
+  void draw(FieldToImgConverter converter, const std::pair<cv::Point3f, std::string>& data, cv::Mat* out) override;
   Json::Value toJson() const override;
   void fromJson(const Json::Value& v) override;
 
+  void setFontScale(double new_font_scale);
   void setColor(const cv::Scalar& new_color);
   void setImgOffset(const cv::Point2f& new_offset);
 

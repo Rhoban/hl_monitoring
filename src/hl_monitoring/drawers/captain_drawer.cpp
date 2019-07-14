@@ -1,5 +1,7 @@
 #include <hl_monitoring/drawers/captain_drawer.h>
 
+#include <hl_monitoring/drawers/text_drawer.h>
+
 #include <opencv2/imgproc.hpp>
 
 using namespace hl_communication;
@@ -21,7 +23,12 @@ void CaptainDrawer::draw(FieldToImgConverter converter, const hl_communication::
 {
   if (captain.has_ball())
   {
+    // TODO: create a 'common_ball' drawer
     ball_drawer.draw(converter, captain.ball().position(), out);
+    cv::Point3f ball_pos_in_field(captain.ball().position().x(), captain.ball().position().y(), 0);
+    TextDrawer text_drawer;
+    text_drawer.setFontScale(0.7);
+    text_drawer.draw(converter, ball_pos_in_field, std::to_string(captain.ball().nb_votes()), out);
   }
   for (const CommonOpponent& opponent : captain.opponents())
   {

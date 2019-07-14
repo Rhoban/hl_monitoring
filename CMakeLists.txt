@@ -5,6 +5,9 @@ find_package(catkin REQUIRED COMPONENTS
   hl_communication
   )
 
+find_package(PkgConfig)
+pkg_check_modules(GTKMM gtkmm-2.4)
+
 # Require an external dependency to flycapture library
 option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" ON)
 
@@ -15,9 +18,13 @@ set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 
 set(DELEGATE_INCLUDE_DIRS
-  include)
+  include
+  ${GTKMM_INCLUDE_DIRS}
+  )
 
-set(DELEGATE_LIBRARIES)
+set(DELEGATE_LIBRARIES
+  ${GTKMM_LIBRARIES}
+  )
 
 if (HL_MONITORING_USES_FLYCAPTURE)
   add_definitions(-DHL_MONITORING_USES_FLYCAPTURE)
@@ -26,6 +33,11 @@ if (HL_MONITORING_USES_FLYCAPTURE)
     flycapture
     )
 endif(HL_MONITORING_USES_FLYCAPTURE)
+
+set (DELEGATE_LIBRARIES
+  ${DELEGATE_LIBRARIES}
+  flycapture
+  )
 
 catkin_package(
   INCLUDE_DIRS ${DELEGATE_INCLUDE_DIRS}
@@ -38,6 +50,7 @@ include_directories(${DELEGATE_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS} )
 set(SOURCES_DIRECTORIES
   src/hl_monitoring
   src/hl_monitoring/drawers
+  src/hl_monitoring/gtkmm
   )
 
 #Include Sources sub sources
@@ -74,4 +87,7 @@ if (BUILD_HL_MONITORING_TOOLS)
 
   add_executable(meta_information_tool tools/meta_information_tool.cpp)
   target_link_libraries(meta_information_tool ${PROJECT_NAME} ${LINKED_LIBRARIES})
+
+  add_executable(test_gtkmm tools/test_gtkmm.cpp)
+  target_link_libraries(test_gtkmm ${PROJECT_NAME} ${LINKED_LIBRARIES})
 endif()

@@ -1,3 +1,4 @@
+#include <hl_monitoring/gtkmm/dialogs.h>
 #include <hl_monitoring/gtkmm/replay_widget.h>
 
 #include <opencv2/highgui.hpp>
@@ -26,31 +27,16 @@ public:
 private:
   void on_button_clicked()
   {
-    Gtk::FileChooserDialog dialog("Please choose video", Gtk::FILE_CHOOSER_ACTION_OPEN);
-    dialog.set_transient_for(*this);
-    dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
-    dialog.add_button("Select", Gtk::RESPONSE_OK);
-    int result = dialog.run();
-    switch (result)
+    std::string video_file;
+    if (requestVideoFile(this, &video_file))
     {
-      case (Gtk::RESPONSE_OK):
-      {
-        std::string file = dialog.get_filename();
-        // TODO: add_metadata
-        std::unique_ptr<ReplayImageProvider> provider(new ReplayImageProvider(file));
-        replay_widget.setImageProvider(std::move(provider));
-        break;
-      }
-      case (Gtk::RESPONSE_CANCEL):
-      {
-        std::cout << "Cancel clicked." << std::endl;
-        break;
-      }
-      default:
-      {
-        std::cout << "Unexpected button clicked." << std::endl;
-        break;
-      }
+      std::string protobuf_file;
+      std::unique_ptr<ReplayImageProvider> provider;
+      if (requestProtobufFile(this, &protobuf_file))
+        provider.reset(new ReplayImageProvider(video_file, protobuf_file));
+      else
+        provider.reset(new ReplayImageProvider(video_file));
+      replay_widget.setImageProvider(std::move(provider));
     }
   }
 

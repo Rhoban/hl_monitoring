@@ -11,8 +11,7 @@ namespace hl_monitoring
 class ReplayWidget : Gtk::Widget
 {
 public:
-  ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, const std::string& window_name,
-               bool playing = false, const Field& field = Field());
+  ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, bool playing = false, const Field& field = Field());
   virtual ~ReplayWidget();
 
   void run();
@@ -37,8 +36,6 @@ public:
   void printHelp();
 
   std::string keyCode2Str(int key);
-
-  virtual void treatMouseEvent(int event, int x, int y, int flags);
 
   struct Action
   {

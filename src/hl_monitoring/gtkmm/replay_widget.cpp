@@ -12,11 +12,9 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-ReplayWidget::ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, const std::string& window_name,
-                           bool playing, const Field& field)
+ReplayWidget::ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, bool playing, const Field& field)
   : provider(std::move(image_provider))
   , field(field)
-  , window_name(window_name)
   , now(0)
   , step_ms(33)  // Default frequency -> ~30Hz
   , playing(playing)
@@ -25,7 +23,6 @@ ReplayWidget::ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, 
   , text_color(255, 255, 255)
 {
   now = provider->getStart();
-  cv::namedWindow(window_name, cv::WINDOW_NORMAL);
   addBinding('h', "Print help", [this]() { this->printHelp(); });
   addBinding(' ', "Toggle play/pause", [this]() { this->playing = !this->playing; });
   addBinding('q', "Quit replay", [this]() { this->quit(); });
@@ -33,12 +30,6 @@ ReplayWidget::ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, 
   addBinding('-', "Divide speed by 2", [this]() { this->setSpeed(this->speed / 2); });
   addBinding('b', "Set playing direction to backward", [this]() { this->setSpeed(-std::fabs(this->speed)); });
   addBinding('f', "Set playing direction to forward", [this]() { this->setSpeed(std::fabs(this->speed)); });
-  // TODO: add mouse handler
-  cv::setMouseCallback(window_name,
-                       [](int event, int x, int y, int flags, void* ptr) -> void {
-                         ((ReplayWidget*)ptr)->treatMouseEvent(event, x, y, flags);
-                       },
-                       this);
 }
 
 ReplayWidget::~ReplayWidget()
@@ -91,14 +82,6 @@ std::string ReplayWidget::keyCode2Str(int key)
     return result;
   }
   return std::to_string(key);
-}
-
-void ReplayWidget::treatMouseEvent(int event, int x, int y, int flags)
-{
-  (void)event;
-  (void)x;
-  (void)y;
-  (void)flags;
 }
 
 hl_communication::VideoMetaInformation ReplayWidget::getMetaInformation() const

@@ -1,4 +1,5 @@
 #include <hl_monitoring/gtkmm/image_widget.h>
+#include <hl_monitoring/gtkmm/video_controller.h>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -15,12 +16,18 @@ public:
     set_border_width(10);
     button.signal_clicked().connect(sigc::mem_fun(*this, &TestWindow::on_button_clicked));
     layout.add(button);
-    layout.add(img_widget);
-    add(layout);
     button.show();
+    layout.add(img_widget);
     img_widget.show();
+    layout.add(video_controller);
+    video_controller.show();
+    add(layout);
     layout.show();
     layout.set_size_request(500, 600);
+    int tick_period_ms = 50;
+    sigc::slot<bool> time_slot(sigc::bind(sigc::mem_fun(*this, &TestWindow::on_time_tick), 0));
+    Glib::signal_timeout().connect(time_slot, tick_period_ms);
+    video_controller.setTimeLimits(std::pow(10, 6), std::pow(10, 8));
   }
 
 private:
@@ -54,8 +61,16 @@ private:
     }
   }
 
+  bool on_time_tick(int timer)
+  {
+    (void)timer;
+    video_controller.tickTime();
+    return true;
+  }
+
   Gtk::Button button;
   ImageWidget img_widget;
+  VideoController video_controller;
   Gtk::VBox layout;
 };
 

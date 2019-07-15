@@ -18,7 +18,7 @@ ReplayWidget::ReplayWidget() : text_color(255, 255, 255), last_tick(0)
   img_widget.show();
   add(video_ctrl);
   video_ctrl.show();
-  int tick_period_ms = 50;
+  int tick_period_ms = 30;
   sigc::slot<bool> time_slot(sigc::mem_fun(*this, &ReplayWidget::tick));
   Glib::signal_timeout().connect(time_slot, tick_period_ms);
 }
@@ -50,6 +50,7 @@ bool ReplayWidget::tick()
   step();
   paintImg();
   img_widget.updateImage(display_img);
+  last_tick = now;
   return true;
 }
 

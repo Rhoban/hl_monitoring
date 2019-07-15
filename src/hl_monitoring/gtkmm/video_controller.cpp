@@ -51,6 +51,11 @@ void VideoController::tickTime()
   updateTimeBar();
 }
 
+uint64_t VideoController::getTime() const
+{
+  return now;
+}
+
 void VideoController::on_play_toggle()
 {
   is_playing = play_button.get_active();
@@ -77,6 +82,7 @@ Glib::ustring VideoController::on_timebar_format_value(double value)
 bool VideoController::on_timebar_change_value(Gtk::ScrollType scroll, double new_value)
 {
   now = new_value * std::pow(10, 6);
+  return true;
 }
 
 uint64_t VideoController::boundTime(uint64_t t) const

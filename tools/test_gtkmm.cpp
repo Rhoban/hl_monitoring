@@ -1,5 +1,4 @@
-#include <hl_monitoring/gtkmm/image_widget.h>
-#include <hl_monitoring/gtkmm/video_controller.h>
+#include <hl_monitoring/gtkmm/replay_widget.h>
 
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -11,29 +10,23 @@ using namespace hl_monitoring;
 class TestWindow : public Gtk::Window
 {
 public:
-  TestWindow() : button("Choose image")
+  TestWindow() : button("Choose Log")
   {
     set_border_width(10);
     button.signal_clicked().connect(sigc::mem_fun(*this, &TestWindow::on_button_clicked));
     layout.add(button);
     button.show();
-    layout.add(img_widget);
-    img_widget.show();
-    layout.add(video_controller);
-    video_controller.show();
+    layout.add(replay_widget);
+    replay_widget.show();
     add(layout);
     layout.show();
-    layout.set_size_request(500, 600);
-    int tick_period_ms = 50;
-    sigc::slot<bool> time_slot(sigc::bind(sigc::mem_fun(*this, &TestWindow::on_time_tick), 0));
-    Glib::signal_timeout().connect(time_slot, tick_period_ms);
-    video_controller.setTimeLimits(std::pow(10, 6), std::pow(10, 8));
+    layout.set_size_request(800, 600);
   }
 
 private:
   void on_button_clicked()
   {
-    Gtk::FileChooserDialog dialog("Please choose a file", Gtk::FILE_CHOOSER_ACTION_OPEN);
+    Gtk::FileChooserDialog dialog("Please choose video", Gtk::FILE_CHOOSER_ACTION_OPEN);
     dialog.set_transient_for(*this);
     dialog.add_button("_Cancel", Gtk::RESPONSE_CANCEL);
     dialog.add_button("Select", Gtk::RESPONSE_OK);
@@ -42,10 +35,10 @@ private:
     {
       case (Gtk::RESPONSE_OK):
       {
-        std::cout << "Select clicked." << std::endl;
-        std::cout << "File selected: " << dialog.get_filename() << std::endl;
-        cv::Mat mat = cv::imread(std::string(dialog.get_filename()));
-        img_widget.updateImage(mat);
+        std::string file = dialog.get_filename();
+        // TODO: add_metadata
+        std::unique_ptr<ReplayImageProvider> provider(new ReplayImageProvider(file));
+        replay_widget.setImageProvider(std::move(provider));
         break;
       }
       case (Gtk::RESPONSE_CANCEL):
@@ -61,16 +54,8 @@ private:
     }
   }
 
-  bool on_time_tick(int timer)
-  {
-    (void)timer;
-    video_controller.tickTime();
-    return true;
-  }
-
   Gtk::Button button;
-  ImageWidget img_widget;
-  VideoController video_controller;
+  ReplayWidget replay_widget;
   Gtk::VBox layout;
 };
 

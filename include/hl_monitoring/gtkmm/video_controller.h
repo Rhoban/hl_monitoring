@@ -28,6 +28,8 @@ public:
    */
   void tickTime();
 
+  uint64_t getTime() const;
+
   void on_play_toggle();
   Glib::ustring on_timebar_format_value(double value);
   bool on_timebar_change_value(Gtk::ScrollType scroll, double new_value);

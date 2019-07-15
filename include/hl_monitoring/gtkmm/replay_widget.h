@@ -2,19 +2,23 @@
 
 #include <hl_monitoring/field.h>
 #include <hl_monitoring/replay_image_provider.h>
+#include <hl_monitoring/gtkmm/image_widget.h>
+#include <hl_monitoring/gtkmm/video_controller.h>
 
 #include <functional>
-#include <gtkmm/widget.h>
 
 namespace hl_monitoring
 {
-class ReplayWidget : Gtk::Widget
+class ReplayWidget : public Gtk::VBox
 {
 public:
-  ReplayWidget(std::unique_ptr<ReplayImageProvider> image_provider, bool playing = false, const Field& field = Field());
+  ReplayWidget();
   virtual ~ReplayWidget();
 
-  void run();
+  void setImageProvider(std::unique_ptr<ReplayImageProvider> image_provider);
+  void setField(const Field& field);
+
+  bool tick();
 
   /**
    * Update timestamp and retrieve image + calibration information
@@ -26,23 +30,6 @@ public:
    */
   virtual void paintImg();
 
-  virtual void updateTime();
-  /**
-   * Throws a logic_error if the key is already included
-   */
-  void addBinding(int key, const std::string& help_msg, std::function<void()> callback);
-  void quit();
-  void setSpeed(double speed);
-  void printHelp();
-
-  std::string keyCode2Str(int key);
-
-  struct Action
-  {
-    std::function<void()> callback;
-    std::string help_msg;
-  };
-
   hl_communication::VideoMetaInformation getMetaInformation() const;
   hl_communication::VideoSourceID getSourceId() const;
 
@@ -51,17 +38,13 @@ public:
    */
   std::unique_ptr<ReplayImageProvider> provider;
 
+  ImageWidget img_widget;
+  VideoController video_ctrl;
+
   /**
    * The model of the field used for the replay
    */
   Field field;
-
-  std::map<int, Action> key_bindings;
-
-  /**
-   * The name of the cv window used for display
-   */
-  std::string window_name;
 
   /**
    * The image of the provider with calibration parameters
@@ -74,34 +57,11 @@ public:
   cv::Mat display_img;
 
   /**
-   * The actual timestamp of the video in the camera
-   */
-  uint64_t now;
-
-  /**
-   * Duration of a time step
-   */
-  int step_ms;
-
-  /**
-   * Is the replay in progress or not
-   */
-  bool playing;
-
-  /**
-   * Current reading speed
-   */
-  double speed;
-
-  /**
-   * When set to true, end run after the next step
-   */
-  bool end;
-
-  /**
    * The color of text painted in the img
    */
   cv::Scalar text_color;
+
+  uint64_t last_tick;
 };
 
 }  // namespace hl_monitoring

@@ -45,7 +45,15 @@ public:
   void loadMessageManager(const Json::Value& v);
 
   void setMessageManager(std::unique_ptr<hl_communication::MessageManager> message_manager);
+  /**
+   * Only use this for external cameras
+   */
   void addImageProvider(const std::string& name, std::unique_ptr<ImageProvider> image_provider);
+  /**
+   * Add an image provider based on robot
+   */
+  void addImageProvider(const hl_communication::RobotCameraIdentifier& camera_id,
+                        std::unique_ptr<ImageProvider> image_provider);
 
   void update();
 
@@ -56,9 +64,10 @@ public:
 
   /**
    * Returns non-mutable access to the given image provider if it exists.
-   * throws std::out_of_range if name is not valid.
+   * throws std::out_of_range if name is not valid or if multiple providers with the same name exists
    */
   const ImageProvider& getImageProvider(const std::string& name) const;
+  const ImageProvider& getImageProvider(const std::string& name, uint64_t time_stamp) const;
 
   std::set<std::string> getImageProvidersNames() const;
 
@@ -66,6 +75,10 @@ public:
    * Return the first time_stamp found in messages and video streams
    */
   uint64_t getStart() const;
+  /**
+   * Return last time_stamp found in messages and video streams
+   */
+  uint64_t getEnd() const;
 
   bool isGood() const;
 
@@ -95,9 +108,15 @@ private:
   std::unique_ptr<hl_communication::MessageManager> message_manager;
 
   /**
-   * Access to all the channels allowing to retrieve images
+   * Access to external cameras stream, each camera can have multiple image providers if there are multiple sequences,
+   * the sequences are ordered by timestamp at start of the sequence
    */
-  std::map<std::string, std::unique_ptr<ImageProvider>> image_providers;
+  std::map<std::string, std::map<uint64_t, std::unique_ptr<ImageProvider>>> external_providers;
+  /**
+   * Access to robot cameras stream, each camera can have multiple image providers if there are multiple sequences, the
+   * sequences are ordered by timestamp at start of the sequence
+   */
+  std::map<hl_communication::RobotCameraIdentifier, std::map<uint64_t, std::unique_ptr<ImageProvider>>> robot_providers;
 
   /**
    * Dimensions of the field

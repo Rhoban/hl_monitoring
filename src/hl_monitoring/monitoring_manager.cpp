@@ -6,6 +6,7 @@
 #include <hl_monitoring/replay_image_provider.h>
 
 #include <fstream>
+#include <iostream>
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -28,16 +29,12 @@ MonitoringManager::~MonitoringManager()
   {
     message_manager->saveMessages(output_prefix + "messages.bin");
   }
-  for (auto& entry : image_providers)
-  {
-    delete (entry.second.release());
-  }
 }
 
 void MonitoringManager::autoLiveStart()
 {
   live = true;
-  image_providers.clear();
+  external_providers.clear();
   message_manager.reset(new MessageManager(getGCDefaultPort(), true));
   field = Field();
   team_manager = TeamManager();
@@ -88,19 +85,20 @@ void MonitoringManager::dumpReplayConfig()
   if (!live)
     return;
 
-  Json::Value v;
-  v["live"] = false;
-  v["image_providers"] = Json::Value(Json::ValueType::objectValue);
-  for (const auto& entry : image_providers)
-  {
-    v["image_providers"][entry.first]["class_name"] = "ReplayImageProvider";
-    v["image_providers"][entry.first]["input_path"] = entry.first + ".avi";
-    v["image_providers"][entry.first]["meta_information_path"] = entry.first + ".bin";
-  }
-  v["message_manager"]["file_path"] = "messages.bin";
-  v["field"] = field.toJson();
-  v["team_manager"] = team_manager.toJson();
-  writeJson(v, output_prefix + "replay.json", true);
+  // TODO: need update for image providers
+  //  Json::Value v;
+  //  v["live"] = false;
+  //  v["image_providers"] = Json::Value(Json::ValueType::objectValue);
+  //  for (const auto& entry : image_providers)
+  //  {
+  //    v["image_providers"][entry.first]["class_name"] = "ReplayImageProvider";
+  //    v["image_providers"][entry.first]["input_path"] = entry.first + ".avi";
+  //    v["image_providers"][entry.first]["meta_information_path"] = entry.first + ".bin";
+  //  }
+  //  v["message_manager"]["file_path"] = "messages.bin";
+  //  v["field"] = field.toJson();
+  //  v["team_manager"] = team_manager.toJson();
+  //  writeJson(v, output_prefix + "replay.json", true);
 }
 
 std::unique_ptr<ImageProvider> MonitoringManager::buildImageProvider(const Json::Value& v, const std::string& name)
@@ -223,43 +221,57 @@ void MonitoringManager::setMessageManager(std::unique_ptr<MessageManager> new_me
 
 void MonitoringManager::addImageProvider(const std::string& name, std::unique_ptr<ImageProvider> image_provider)
 {
-  if (image_providers.count(name) > 0)
-  {
-    throw std::logic_error("Failed to add Image Provider: '" + name + "' already in collection");
-  }
-  image_providers[name] = std::move(image_provider);
+  uint64_t ip_start = image_provider->getStart();
+  if (external_providers.count(name) > 0 && external_providers.at(name).count(ip_start))
+    throw std::logic_error(HL_DEBUG + "Failed to add External Image Provider: '" + name + "' starting at " +
+                           std::to_string(ip_start) + " is already in collection");
   if (live)
-  {
-    image_providers[name]->setExternalName(name);
-  }
+    image_provider->setExternalName(name);
+  external_providers[name][ip_start] = std::move(image_provider);
 }
 
 void MonitoringManager::update()
 {
-  for (const auto& entry : image_providers)
+  for (const auto& entry : external_providers)
   {
-    entry.second->update();
+    for (const auto& provider_entry : entry.second)
+    {
+      provider_entry.second->update();
+    }
+  }
+  for (const auto& entry : robot_providers)
+  {
+    for (const auto& provider_entry : entry.second)
+    {
+      provider_entry.second->update();
+    }
   }
   message_manager->update();
 }
 
 CalibratedImage MonitoringManager::getCalibratedImage(const std::string& provider_name, uint64_t time_stamp)
 {
-  if (image_providers.count(provider_name) == 0)
-  {
+  if (external_providers.count(provider_name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name + "'");
-  }
-  return image_providers.at(provider_name)->getCalibratedImage(time_stamp);
+  for (const auto& entry : external_providers.at(provider_name))
+    if (entry.second->getStart() <= time_stamp)
+      return entry.second->getCalibratedImage(time_stamp);
+  throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name +
+                          "' for timestamp: " + std::to_string(time_stamp));
 }
 
 std::map<std::string, CalibratedImage> MonitoringManager::getCalibratedImages(uint64_t time_stamp)
 {
   std::map<std::string, CalibratedImage> images;
-  for (const auto& entry : image_providers)
+  for (const std::string& provider_name : getImageProvidersNames())
   {
-    if (entry.second->getStart() <= time_stamp)
+    try
     {
-      images[entry.first] = entry.second->getCalibratedImage(time_stamp);
+      images[provider_name] = getCalibratedImage(provider_name, time_stamp);
+    }
+    catch (const std::out_of_range& exc)
+    {
+      std::cerr << "Can't get image: " << exc.what() << std::endl;
     }
   }
   return images;
@@ -276,17 +288,29 @@ const hl_communication::MessageManager& MonitoringManager::getMessageManager() c
 
 const ImageProvider& MonitoringManager::getImageProvider(const std::string& name) const
 {
-  if (image_providers.count(name) == 0)
-  {
+  if (external_providers.count(name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + name + "'");
-  }
-  return *(image_providers.at(name));
+  if (external_providers.at(name).size() > 0)
+    throw std::out_of_range(HL_DEBUG + " multiple image providers named '" + name +
+                            "' timestamp should also be provided");
+  return *(external_providers.at(name).begin()->second);
+}
+
+const ImageProvider& MonitoringManager::getImageProvider(const std::string& name, uint64_t time_stamp) const
+{
+  if (external_providers.count(name) == 0)
+    throw std::out_of_range(HL_DEBUG + " no image provider named '" + name + "'");
+  for (const auto& entry : external_providers.at(name))
+    if (entry.second->getStart() <= time_stamp)
+      return *(entry.second);
+  throw std::out_of_range(HL_DEBUG + " no image provider named '" + name +
+                          "' for the given time_stamp: " + std::to_string(time_stamp));
 }
 
 std::set<std::string> MonitoringManager::getImageProvidersNames() const
 {
   std::set<std::string> names;
-  for (const auto& entry : image_providers)
+  for (const auto& entry : external_providers)
   {
     names.insert(entry.first);
   }
@@ -296,20 +320,34 @@ std::set<std::string> MonitoringManager::getImageProvidersNames() const
 uint64_t MonitoringManager::getStart() const
 {
   uint64_t min_ts = std::numeric_limits<uint64_t>::max();
-  min_ts = std::min(min_ts, message_manager->getStart());
-  for (const auto& entry : image_providers)
+  if (message_manager)
+    min_ts = std::min(min_ts, message_manager->getStart());
+  for (const auto& entry : external_providers)
   {
-    min_ts = std::min(min_ts, entry.second->getStart());
+    min_ts = std::min(min_ts, entry.second.begin()->second->getStart());
   }
   return min_ts;
 }
 
+uint64_t MonitoringManager::getEnd() const
+{
+  uint64_t max_ts = 0;
+  if (message_manager)
+    max_ts = std::max(max_ts, message_manager->getEnd());
+  for (const auto& entry : external_providers)
+  {
+    max_ts = std::max(max_ts, entry.second.begin()->second->getEnd());
+  }
+  return max_ts;
+}
+
 bool MonitoringManager::isGood() const
 {
-  for (const auto& entry : image_providers)
+  for (const auto& entry : external_providers)
   {
-    if (entry.second->isStreamFinished())
-      return false;
+    for (const auto& provider_entry : entry.second)
+      if (provider_entry.second->isStreamFinished())
+        return false;
   }
   return true;
 }
@@ -325,9 +363,10 @@ void MonitoringManager::setOffset(int64 offset)
   {
     message_manager->setOffset(offset);
   }
-  for (auto& ip : image_providers)
+  for (auto& entry : external_providers)
   {
-    ip.second->setOffset(offset);
+    for (auto& ip : entry.second)
+      ip.second->setOffset(offset);
   }
 }
 
@@ -338,10 +377,9 @@ int64 MonitoringManager::getOffset() const
   {
     offsets.push_back(message_manager->getOffset());
   }
-  for (const auto& entry : image_providers)
-  {
-    offsets.push_back(entry.second->getOffset());
-  }
+  for (const auto& entry : external_providers)
+    for (const auto& ip : entry.second)
+      offsets.push_back(ip.second->getOffset());
   if (offsets.size() == 0)
   {
     return 0;
@@ -369,7 +407,9 @@ const TeamManager& MonitoringManager::getTeamManager() const
 
 void MonitoringManager::setPose(const std::string& provider_name, int frame_idx, const Pose3D& pose)
 {
-  image_providers.at(provider_name)->setPose(frame_idx, pose);
+  if (external_providers.count(provider_name) == 0 || external_providers.at(provider_name).size() > 1)
+    throw std::out_of_range(HL_DEBUG + " provider name: " + provider_name);
+  external_providers.at(provider_name).begin()->second->setPose(frame_idx, pose);
 }
 
 }  // namespace hl_monitoring

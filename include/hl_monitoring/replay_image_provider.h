@@ -32,6 +32,13 @@ public:
 
   void setIndex(int index);
 
+  /**
+   * Try to load all the replays in the given folder based on the following elements:
+   * - Movie ends with '.avi' files
+   * - Metadata files have the same name as movie file but extension ".pb"
+   */
+  static std::vector<std::unique_ptr<ImageProvider>> loadReplays(const std::string& folder);
+
 private:
   /**
    * The video read from the file

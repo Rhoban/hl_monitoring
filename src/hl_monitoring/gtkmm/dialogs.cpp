@@ -6,6 +6,31 @@
 
 namespace hl_monitoring
 {
+bool requestFolder(Gtk::Window* window, std::string* path)
+{
+  Gtk::FileChooserDialog dialog("Choose log folder", Gtk::FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  dialog.set_transient_for(*window);
+  dialog.add_button(Gtk::Stock::CANCEL, Gtk::RESPONSE_CANCEL);
+  dialog.add_button(Gtk::Stock::OPEN, Gtk::RESPONSE_OK);
+  int result = dialog.run();
+  switch (result)
+  {
+    case (Gtk::RESPONSE_OK):
+    {
+      *path = std::string(dialog.get_filename());
+      return true;
+    }
+    case (Gtk::RESPONSE_CANCEL):
+    {
+      std::cout << HL_DEBUG << "request file canceled by user" << std::endl;
+      break;
+    }
+    default:
+      std::cout << HL_DEBUG << "Unexpected button pressed" << std::endl;
+  }
+  return false;
+}
+
 bool requestFile(Gtk::Window* window, const std::string& pattern_name, const std::vector<std::string>& patterns,
                  std::string* path)
 {

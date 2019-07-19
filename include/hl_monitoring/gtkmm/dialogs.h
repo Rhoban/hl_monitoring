@@ -5,6 +5,11 @@
 namespace hl_monitoring
 {
 /**
+ * Request a folder from window, the folder path is written to 'path'
+ * Return true on success.
+ */
+bool requestFolder(Gtk::Window* window, std::string* path);
+/**
  * Request a file from window with the given pattern, the file path is written to 'path'
  * Return true on success.
  *

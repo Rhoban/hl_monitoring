@@ -9,11 +9,14 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
-MultiCameraWidget::MultiCameraWidget() : load_replay_button("Load replay")
+MultiCameraWidget::MultiCameraWidget() : load_replay_button("Load replay"), load_folder_button("Load folder")
 {
   load_replay_button.signal_clicked().connect(sigc::mem_fun(*this, &MultiCameraWidget::on_load_replay));
   load_buttons.add(load_replay_button);
   load_replay_button.show();
+  load_folder_button.signal_clicked().connect(sigc::mem_fun(*this, &MultiCameraWidget::on_load_folder));
+  load_buttons.add(load_folder_button);
+  load_folder_button.show();
   add(load_buttons);
   load_buttons.show();
   add(available_sources);
@@ -70,6 +73,39 @@ void MultiCameraWidget::on_load_replay()
       activation_buttons[source_name]->show();
       activation_buttons[source_name]->set_active(true);
     }
+  }
+}
+
+void MultiCameraWidget::on_load_folder()
+{
+  std::string log_folder;
+  Gtk::Window* window = (Gtk::Window*)get_toplevel();
+  if (requestFolder(window, &log_folder))
+  {
+    std::vector<std::unique_ptr<ImageProvider>> logs = ReplayImageProvider::loadReplays(log_folder);
+    for (std::unique_ptr<ImageProvider>& provider : logs)
+    {
+      // TODO: avoid code duplication (with on_load_replay)
+      const VideoSourceID& source_id = provider->getMetaInformation().source_id();
+      std::ostringstream source_oss;
+      if (source_id.has_robot_source())
+        source_oss << source_id.robot_source();
+      else if (source_id.has_external_source())
+        source_oss << source_id.external_source();
+      else
+        throw std::logic_error(HL_DEBUG + "Unknown type of source");
+      std::string source_name = source_oss.str();
+      manager.addImageProvider(source_name, std::move(provider));
+      if (display_areas.count(source_name) == 0)
+      {
+        display_areas[source_name] = new ImageWidget();
+        activation_buttons[source_name] = new Gtk::ToggleButton(source_name);
+        available_sources.add(*activation_buttons[source_name]);
+        activation_buttons[source_name]->show();
+        activation_buttons[source_name]->set_active(true);
+      }
+    }
+    video_ctrl.setTimeLimits(manager.getStart(), manager.getEnd());
   }
 }
 

@@ -26,6 +26,11 @@ protected:
    */
   void on_load_replay();
 
+  /**
+   * Guess and extract all available logs from a folder
+   */
+  void on_load_folder();
+
 private:
   /**
    * Provide access to all the images and messages
@@ -45,6 +50,7 @@ private:
   Gtk::Table image_tables;
 
   Gtk::Button load_replay_button;
+  Gtk::Button load_folder_button;
 
   std::set<std::string> active_sources;
   std::map<std::string, ImageWidget*> display_areas;

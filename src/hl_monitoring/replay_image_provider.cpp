@@ -2,7 +2,11 @@
 
 #include <hl_communication/utils.h>
 
+#include <experimental/filesystem>  // Due to gcc version
 #include <fstream>
+#include <iostream>
+
+namespace fs = std::experimental::filesystem;
 
 using namespace hl_communication;
 
@@ -138,4 +142,31 @@ void ReplayImageProvider::setIndex(int new_index)
     throw std::runtime_error(HL_DEBUG + "Failed to set index to " + std::to_string(index) + " in video");
   }
 }
+
+std::vector<std::unique_ptr<ImageProvider>> ReplayImageProvider::loadReplays(const std::string& folder)
+{
+  std::vector<std::unique_ptr<ImageProvider>> providers;
+  std::vector<fs::path> movie_paths;
+  for (auto& p : fs::recursive_directory_iterator(folder))
+  {
+    const fs::path& path = p.path();
+    if (path.extension() == ".avi")
+      movie_paths.push_back(path);
+  }
+  for (const fs::path& movie_path : movie_paths)
+  {
+    fs::path pb_path = movie_path;
+    pb_path.replace_extension(".pb");
+    if (fs::exists(pb_path))
+    {
+      providers.push_back(std::unique_ptr<ImageProvider>(new ReplayImageProvider(movie_path, pb_path)));
+    }
+    else
+    {
+      std::cerr << "File " << pb_path << " was not found" << std::endl;
+    }
+  }
+  return providers;
+}
+
 }  // namespace hl_monitoring

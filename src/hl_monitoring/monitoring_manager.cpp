@@ -249,15 +249,20 @@ void MonitoringManager::update()
   message_manager->update();
 }
 
+// TODO: getCalibratedImage const should be available for image providers, then code would get a lot simpler (can use
+// getImageProvider)
 CalibratedImage MonitoringManager::getCalibratedImage(const std::string& provider_name, uint64_t time_stamp)
 {
   if (external_providers.count(provider_name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name + "'");
-  for (const auto& entry : external_providers.at(provider_name))
-    if (entry.second->getStart() <= time_stamp)
-      return entry.second->getCalibratedImage(time_stamp);
-  throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name +
-                          "' for timestamp: " + std::to_string(time_stamp));
+  if (external_providers.at(provider_name).begin()->second->getStart() > time_stamp)
+    throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name +
+                            "' for the given time_stamp: " + std::to_string(time_stamp));
+  if (external_providers.at(provider_name).rbegin()->second->getStart() <= time_stamp)
+    return external_providers.at(provider_name).rbegin()->second->getCalibratedImage(time_stamp);
+  auto it = external_providers.at(provider_name).upper_bound(time_stamp);
+  it--;
+  return it->second->getCalibratedImage(time_stamp);
 }
 
 std::map<std::string, CalibratedImage> MonitoringManager::getCalibratedImages(uint64_t time_stamp)
@@ -300,11 +305,14 @@ const ImageProvider& MonitoringManager::getImageProvider(const std::string& name
 {
   if (external_providers.count(name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + name + "'");
-  for (const auto& entry : external_providers.at(name))
-    if (entry.second->getStart() <= time_stamp)
-      return *(entry.second);
-  throw std::out_of_range(HL_DEBUG + " no image provider named '" + name +
-                          "' for the given time_stamp: " + std::to_string(time_stamp));
+  if (external_providers.at(name).begin()->second->getStart() > time_stamp)
+    throw std::out_of_range(HL_DEBUG + " no image provider named '" + name +
+                            "' for the given time_stamp: " + std::to_string(time_stamp));
+  if (external_providers.at(name).rbegin()->second->getStart() <= time_stamp)
+    return *(external_providers.at(name).rbegin()->second);
+  auto it = external_providers.at(name).upper_bound(time_stamp);
+  it--;
+  return *(it->second);
 }
 
 std::set<std::string> MonitoringManager::getImageProvidersNames() const
@@ -336,7 +344,7 @@ uint64_t MonitoringManager::getEnd() const
     max_ts = std::max(max_ts, message_manager->getEnd());
   for (const auto& entry : external_providers)
   {
-    max_ts = std::max(max_ts, entry.second.begin()->second->getEnd());
+    max_ts = std::max(max_ts, entry.second.rbegin()->second->getEnd());
   }
   return max_ts;
 }

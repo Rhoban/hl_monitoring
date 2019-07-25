@@ -1,0 +1,28 @@
+{
+    "message_manager" : { "ports" : [3939]},
+    "image_providers" : {},
+    "live" : true,
+    "field":
+    {
+        "border_strip_width_x" : 1.0,
+        "border_strip_width_y" : 1.0,
+        "center_radius" : 1.5,
+        "field_length" : 14,
+        "field_width" : 9,
+        "goal_area_length" : 1,
+        "goal_area_width" : 4,
+        "penalty_area_length" : 3,
+        "penalty_area_width" : 6,
+        "goal_depth" : 0.6,
+        "goal_width" : 2.6,
+        "line_width" : 0.05,
+        "penalty_mark_dist" : 2.1,
+        "penalty_mark_length" : 0.15,
+        "ball_radius" : 0.075
+    },
+    "team_manager" : {
+        "players" : 6,
+        "teams" : {}
+    }
+}
+    

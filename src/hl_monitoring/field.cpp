@@ -75,11 +75,13 @@ Field::Field()
   border_strip_width_x = 0.70;  // Minimum value
   border_strip_width_y = 0.70;  // Minimum value
   penalty_mark_dist = 1.50;
-  penalty_mark_length = 0.10;
+  penalty_mark_length = 0.15;
   goal_width = 2.60;
   goal_depth = 0.60;
   goal_area_length = 1.00;
-  goal_area_width = 5.00;
+  goal_area_width = 3.00;
+  penalty_area_width = 5.0;
+  penalty_area_length = 2.0;
   field_length = 9.00;
   field_width = 6.00;
   updateAll();
@@ -99,6 +101,8 @@ Json::Value Field::toJson() const
   v["goal_depth"] = goal_depth;
   v["goal_area_length"] = goal_area_length;
   v["goal_area_width"] = goal_area_width;
+  v["penalty_area_length"] = penalty_area_length;
+  v["penalty_area_width"] = penalty_area_width;
   v["field_length"] = field_length;
   v["field_width"] = field_width;
   return v;
@@ -117,6 +121,8 @@ void Field::fromJson(const Json::Value& v)
   readVal(v, "goal_depth", &goal_depth);
   readVal(v, "goal_area_length", &goal_area_length);
   readVal(v, "goal_area_width", &goal_area_width);
+  readVal(v, "penalty_area_length", &penalty_area_length);
+  readVal(v, "penalty_area_width", &penalty_area_width);
   readVal(v, "field_length", &field_length);
   readVal(v, "field_width", &field_width);
   updateAll();
@@ -215,12 +221,24 @@ void Field::updatePointsOfInterest()
   points_of_interest["goal_area_corner+-"] = cv::Point3f(gac_x, -gac_y, 0);
   points_of_interest["goal_area_corner-+"] = cv::Point3f(-gac_x, gac_y, 0);
   points_of_interest["goal_area_corner--"] = cv::Point3f(-gac_x, -gac_y, 0);
+  double pac_x = field_length / 2 - penalty_area_length;
+  double pac_y = penalty_area_width / 2;
+  points_of_interest["penalty_area_corner++"] = cv::Point3f(pac_x, pac_y, 0);
+  points_of_interest["penalty_area_corner+-"] = cv::Point3f(pac_x, -pac_y, 0);
+  points_of_interest["penalty_area_corner-+"] = cv::Point3f(-pac_x, pac_y, 0);
+  points_of_interest["penalty_area_corner--"] = cv::Point3f(-pac_x, -pac_y, 0);
   double gat_x = field_length / 2;
   double gat_y = goal_area_width / 2;
   points_of_interest["goal_area_t++"] = cv::Point3f(gat_x, gat_y, 0);
   points_of_interest["goal_area_t+-"] = cv::Point3f(gat_x, -gat_y, 0);
   points_of_interest["goal_area_t-+"] = cv::Point3f(-gat_x, gat_y, 0);
   points_of_interest["goal_area_t--"] = cv::Point3f(-gat_x, -gat_y, 0);
+  double pat_x = field_length / 2;
+  double pat_y = penalty_area_width / 2;
+  points_of_interest["penalty_area_t++"] = cv::Point3f(pat_x, pat_y, 0);
+  points_of_interest["penalty_area_t+-"] = cv::Point3f(pat_x, -pat_y, 0);
+  points_of_interest["penalty_area_t-+"] = cv::Point3f(-pat_x, pat_y, 0);
+  points_of_interest["penalty_area_t--"] = cv::Point3f(-pat_x, -pat_y, 0);
   double pm_x = field_length / 2 - penalty_mark_dist;
   points_of_interest["penalty_mark+"] = cv::Point3f(pm_x, 0, 0);
   points_of_interest["penalty_mark-"] = cv::Point3f(-pm_x, 0, 0);
@@ -249,6 +267,12 @@ void Field::updateWhiteLines()
   white_lines.push_back({ getPoint("goal_area_t-+"), getPoint("goal_area_corner-+") });
   white_lines.push_back({ getPoint("goal_area_corner-+"), getPoint("goal_area_corner--") });
   white_lines.push_back({ getPoint("goal_area_corner--"), getPoint("goal_area_t--") });
+  white_lines.push_back({ getPoint("penalty_area_t++"), getPoint("penalty_area_corner++") });
+  white_lines.push_back({ getPoint("penalty_area_corner++"), getPoint("penalty_area_corner+-") });
+  white_lines.push_back({ getPoint("penalty_area_corner+-"), getPoint("penalty_area_t+-") });
+  white_lines.push_back({ getPoint("penalty_area_t-+"), getPoint("penalty_area_corner-+") });
+  white_lines.push_back({ getPoint("penalty_area_corner-+"), getPoint("penalty_area_corner--") });
+  white_lines.push_back({ getPoint("penalty_area_corner--"), getPoint("penalty_area_t--") });
 }
 
 void Field::updateArenaBorders()

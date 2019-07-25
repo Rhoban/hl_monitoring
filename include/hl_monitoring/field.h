@@ -166,6 +166,15 @@ public:
   double goal_area_width;
 
   /**
+   * From goal line to penalty area line (lines included) [m]
+   */
+  double penalty_area_length;
+  /**
+   * From one side of the penalty area to the other (lines included) [m]
+   */
+  double penalty_area_width;
+
+  /**
    *  From one goal line to the other (lines included) [m]
    */
   double field_length;

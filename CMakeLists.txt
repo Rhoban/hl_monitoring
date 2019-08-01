@@ -24,7 +24,7 @@ set(DELEGATE_INCLUDE_DIRS
 
 set(DELEGATE_LIBRARIES
   ${GTKMM_LIBRARIES}
-  "stdc++fs"
+  "-lstdc++fs"
   )
 
 if (HL_MONITORING_USES_FLYCAPTURE)

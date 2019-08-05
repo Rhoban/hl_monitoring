@@ -34,10 +34,33 @@ MultiCameraWidget::MultiCameraWidget() : load_replay_button("Load replay"), load
 
 MultiCameraWidget::~MultiCameraWidget()
 {
-  for (auto& entry : display_areas)
-    delete (entry.second);
-  for (auto& entry : activation_buttons)
-    delete (entry.second);
+  for (auto& entry : sources)
+  {
+    delete (entry.second.display_area);
+    delete (entry.second.activation_button);
+  }
+}
+
+void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
+{
+  const VideoSourceID& source_id = provider->getMetaInformation().source_id();
+  std::string source_name = getName(source_id);
+  manager.addImageProvider(source_name, std::move(provider));
+  video_ctrl.setTimeLimits(manager.getStart(), manager.getEnd());
+  if (sources.count(source_name) == 0)
+  {
+    sources[source_name].source_id = source_id;
+    sources[source_name].activated = false;
+    sources[source_name].display_area = new ImageWidget();
+    sources[source_name].activation_button = new Gtk::ToggleButton(source_name);
+    sources[source_name].activation_button->show();
+    sources[source_name].activation_button->set_active(true);
+    for (auto& handler : handlers)
+    {
+      sources[source_name].display_area->registerClickHandler(
+          [source_name, handler](const cv::Point2f& pos) { handler(source_name, pos); });
+    }
+  }
 }
 
 void MultiCameraWidget::on_load_replay()
@@ -47,33 +70,12 @@ void MultiCameraWidget::on_load_replay()
   if (requestVideoFile(window, &video_file))
   {
     std::string protobuf_file;
-    std::unique_ptr<ReplayImageProvider> provider;
+    std::unique_ptr<ImageProvider> provider;
     if (requestProtobufFile(window, &protobuf_file))
       provider.reset(new ReplayImageProvider(video_file, protobuf_file));
     else
       provider.reset(new ReplayImageProvider(video_file));
-    std::cout << "Getting SourceId" << std::endl;
-    const VideoSourceID& source_id = provider->getMetaInformation().source_id();
-    std::ostringstream source_oss;
-    if (source_id.has_robot_source())
-      source_oss << source_id.robot_source();
-    else if (source_id.has_external_source())
-      source_oss << source_id.external_source();
-    else
-      throw std::logic_error(HL_DEBUG + "Unknown type of source");
-    std::string source_name = source_oss.str();
-
-    manager.addImageProvider(source_name, std::move(provider));
-    video_ctrl.setTimeLimits(manager.getStart(), manager.getEnd());
-    if (display_areas.count(source_name) == 0)
-    {
-      source_ids[source_name] = source_id;
-      display_areas[source_name] = new ImageWidget();
-      activation_buttons[source_name] = new Gtk::ToggleButton(source_name);
-      available_sources.add(*activation_buttons[source_name]);
-      activation_buttons[source_name]->show();
-      activation_buttons[source_name]->set_active(true);
-    }
+    addProvider(std::move(provider));
   }
 }
 
@@ -85,29 +87,7 @@ void MultiCameraWidget::on_load_folder()
   {
     std::vector<std::unique_ptr<ImageProvider>> logs = ReplayImageProvider::loadReplays(log_folder);
     for (std::unique_ptr<ImageProvider>& provider : logs)
-    {
-      // TODO: avoid code duplication (with on_load_replay)
-      const VideoSourceID& source_id = provider->getMetaInformation().source_id();
-      std::ostringstream source_oss;
-      if (source_id.has_robot_source())
-        source_oss << source_id.robot_source();
-      else if (source_id.has_external_source())
-        source_oss << source_id.external_source();
-      else
-        throw std::logic_error(HL_DEBUG + "Unknown type of source");
-      std::string source_name = source_oss.str();
-      manager.addImageProvider(source_name, std::move(provider));
-      if (display_areas.count(source_name) == 0)
-      {
-        source_ids[source_name] = source_id;
-        display_areas[source_name] = new ImageWidget();
-        activation_buttons[source_name] = new Gtk::ToggleButton(source_name);
-        available_sources.add(*activation_buttons[source_name]);
-        activation_buttons[source_name]->show();
-        activation_buttons[source_name]->set_active(true);
-      }
-    }
-    video_ctrl.setTimeLimits(manager.getStart(), manager.getEnd());
+      addProvider(std::move(provider));
   }
 }
 
@@ -128,18 +108,16 @@ bool MultiCameraWidget::tick()
 void MultiCameraWidget::step()
 {
   bool has_window_changed = false;
-  std::set<std::string> last_active_sources = active_sources;
-  for (const auto& entry : activation_buttons)
+  std::set<std::string> last_active_sources = getActiveSources();
+  for (auto& entry : sources)
   {
     const std::string& name = entry.first;
-    ImageWidget* display_area = display_areas[name];
-    bool was_active = active_sources.count(name) > 0;
-    if (!entry.second->get_active())
+    SourceStatus& status = entry.second;
+    if (!status.activation_button->get_active())
     {
-      // TODO: test if display area is present
-      if (was_active)
+      if (status.activated)
       {
-        active_sources.erase(name);
+        status.activated = false;
         has_window_changed = true;
         std::cout << "Hidding area for : " << name << std::endl;
       }
@@ -151,23 +129,23 @@ void MultiCameraWidget::step()
       uint64_t now = video_ctrl.getTime();
       uint64_t source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
       // Update image only if source_ts has changed
-      if (source_ts != timestamp_by_image[name])
+      if (source_ts != status.timestamp)
       {
-        calibrated_images[name] = manager.getCalibratedImage(name, source_ts);
-        display_images[name] = calibrated_images[name].getImg().clone();
+        status.calibrated_image = manager.getCalibratedImage(name, source_ts);
+        status.display_image = status.calibrated_image.getImg().clone();
         annotateImg(name);
-        display_area->updateImage(display_images[name]);
-        timestamp_by_image[name] = source_ts;
+        status.display_area->updateImage(status.display_image);
+        status.timestamp = source_ts;
       }
     }
     catch (const std::out_of_range& exc)
     {
       std::cout << exc.what() << std::endl;
     }
-    if (!was_active)
+    if (!status.activated)
     {
-      display_area->show();
-      active_sources.insert(name);
+      status.display_area->show();
+      status.activated = true;
       has_window_changed = true;
       std::cout << "Displaying area for : " << name << std::endl;
     }
@@ -175,13 +153,13 @@ void MultiCameraWidget::step()
   if (has_window_changed)
   {
     for (const std::string& source : last_active_sources)
-      image_tables.remove(*display_areas[source]);
+      image_tables.remove(*(sources[source].display_area));
     int row(0), col(0);
     int nb_rows(1), nb_cols(2);
     image_tables.resize(nb_rows, nb_cols);
-    for (const std::string& source : active_sources)
+    for (auto& entry : sources)
     {
-      image_tables.attach(*display_areas[source], col, col + 1, row, row + 1);
+      image_tables.attach(*entry.second.display_area, col, col + 1, row, row + 1);
       col++;
       if (col == nb_cols)
       {
@@ -192,9 +170,40 @@ void MultiCameraWidget::step()
   }
 }
 
+std::set<std::string> MultiCameraWidget::getActiveSources() const
+{
+  std::set<std::string> result;
+  for (const auto& entry : sources)
+    if (entry.second.activated)
+      result.insert(entry.first);
+  return result;
+}
+
 void MultiCameraWidget::annotateImg(const std::string& name)
 {
   (void)name;
+}
+
+std::string MultiCameraWidget::getName(const hl_communication::VideoSourceID& source_id)
+{
+  std::ostringstream source_oss;
+  if (source_id.has_robot_source())
+    source_oss << source_id.robot_source();
+  else if (source_id.has_external_source())
+    source_oss << source_id.external_source();
+  else
+    throw std::logic_error(HL_DEBUG + "Unknown type of source");
+  return source_oss.str();
+}
+
+void MultiCameraWidget::registerClickHandler(MouseClickHandler handler)
+{
+  handlers.push_back(handler);
+  for (auto& entry : sources)
+  {
+    std::string name = entry.first;
+    entry.second.display_area->registerClickHandler([name, handler](const cv::Point2f& pos) { handler(name, pos); });
+  }
 }
 
 }  // namespace hl_monitoring

@@ -7,10 +7,17 @@ namespace hl_monitoring
 class ImageWidget : public Gtk::EventBox
 {
 public:
+  /**
+   * Event handler receiving position of click inside image referential
+   */
+  typedef std::function<void(cv::Point2f)> MouseClickHandler;
+
   ImageWidget();
 
   bool hasImage() const;
   void updateImage(const cv::Mat& img);
+
+  void registerClickHandler(MouseClickHandler handler);
   void on_size_allocate(Gtk::Allocation& allocation) override;
 
   bool on_mouse_button_press(GdkEventButton* event);
@@ -42,6 +49,8 @@ private:
    * Offset along y-axis between widget coordinates and img_start
    */
   int offset_y;
+
+  std::vector<MouseClickHandler> click_handlers;
 };
 
 }  // namespace hl_monitoring

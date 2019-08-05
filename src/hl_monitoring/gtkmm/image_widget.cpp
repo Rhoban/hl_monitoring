@@ -44,6 +44,10 @@ bool ImageWidget::on_mouse_button_press(GdkEventButton* event)
     double img_y = (event->y - offset_y) / display_scale;
     std::cout << "left button was pressed at (" << event->x << "," << event->y << ") -> img: (" << img_x << ", "
               << img_y << ")" << std::endl;
+    for (const MouseClickHandler& handler : click_handlers)
+    {
+      handler(cv::Point2f(img_x, img_y));
+    }
   }
   return true;
 }
@@ -60,6 +64,11 @@ void ImageWidget::updateImage(const cv::Mat& img)
   cv::cvtColor(img, rgb_img, CV_BGR2RGB);
   scaled_img = rgb_img;
   updatePixbuf();
+}
+
+void ImageWidget::registerClickHandler(MouseClickHandler handler)
+{
+  click_handlers.push_back(handler);
 }
 
 void ImageWidget::updatePixbuf()

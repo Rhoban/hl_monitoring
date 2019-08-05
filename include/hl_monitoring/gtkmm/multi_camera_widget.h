@@ -13,6 +13,7 @@ namespace hl_monitoring
 class MultiCameraWidget : public Gtk::VBox
 {
 public:
+  typedef std::function<void(const std::string& name, const cv::Point2f& click_pos)> MouseClickHandler;
   MultiCameraWidget();
   virtual ~MultiCameraWidget();
 
@@ -21,11 +22,45 @@ public:
   void step();
 
   /**
+   * Returns a list of all the active sources
+   */
+  std::set<std::string> getActiveSources() const;
+
+  /**
    * Draws annotation on the image specified by the given name
    */
   virtual void annotateImg(const std::string& name);
 
+  static std::string getName(const hl_communication::VideoSourceID& id);
+
+  void registerClickHandler(MouseClickHandler handler);
+
 protected:
+  struct SourceStatus
+  {
+    hl_communication::VideoSourceID source_id;
+    /**
+     * Is image currently displayed
+     */
+    bool activated = false;
+    ImageWidget* display_area;
+    Gtk::ToggleButton* activation_button;
+    /**
+     * Raw image from the monitoring manager
+     */
+    CalibratedImage calibrated_image;
+    /**
+     * Image which is displayed, can potentially be annotated
+     */
+    cv::Mat display_image;
+    uint64_t timestamp;
+  };
+
+  /**
+   * Add the given provider to the manager and updates internal representation if required
+   */
+  void addProvider(std::unique_ptr<ImageProvider> provider);
+
   /**
    * Opens dialog box and load a window
    */
@@ -36,7 +71,6 @@ protected:
    */
   void on_load_folder();
 
-protected:
   /**
    * Provide access to all the images and messages
    */
@@ -57,17 +91,15 @@ protected:
   Gtk::Button load_replay_button;
   Gtk::Button load_folder_button;
 
-  std::set<std::string> active_sources;
-  std::map<std::string, ImageWidget*> display_areas;
-  std::map<std::string, hl_communication::VideoSourceID> source_ids;
-  std::map<std::string, Gtk::ToggleButton*> activation_buttons;
-  std::map<std::string, CalibratedImage> calibrated_images;
-  std::map<std::string, cv::Mat> display_images;
-  std::map<std::string, uint64_t> timestamp_by_image;
+  std::map<std::string, SourceStatus> sources;
 
   VideoController video_ctrl;
 
   uint64_t last_tick;
+  /**
+   * Generic handlers for click inside the areas
+   */
+  std::vector<MouseClickHandler> handlers;
 };
 
 }  // namespace hl_monitoring

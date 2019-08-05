@@ -18,7 +18,12 @@ public:
 
   bool tick();
 
-  virtual void step();
+  void step();
+
+  /**
+   * Draws annotation on the image specified by the given name
+   */
+  virtual void annotateImg(const std::string& name);
 
 protected:
   /**
@@ -31,7 +36,7 @@ protected:
    */
   void on_load_folder();
 
-private:
+protected:
   /**
    * Provide access to all the images and messages
    */
@@ -54,9 +59,11 @@ private:
 
   std::set<std::string> active_sources;
   std::map<std::string, ImageWidget*> display_areas;
+  std::map<std::string, hl_communication::VideoSourceID> source_ids;
   std::map<std::string, Gtk::ToggleButton*> activation_buttons;
   std::map<std::string, CalibratedImage> calibrated_images;
   std::map<std::string, cv::Mat> display_images;
+  std::map<std::string, uint64_t> timestamp_by_image;
 
   VideoController video_ctrl;
 

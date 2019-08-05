@@ -94,7 +94,7 @@ public:
    * Return the frame entry for the given timestamp
    *
    */
-  const hl_communication::FrameEntry& getFrameEntry(uint64_t ts);
+  const hl_communication::FrameEntry& getFrameEntry(uint64_t ts) const;
 
   /**
    * Retrieve the meta information corresponding to current img

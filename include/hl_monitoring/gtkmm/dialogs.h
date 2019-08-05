@@ -5,6 +5,11 @@
 namespace hl_monitoring
 {
 /**
+ * Request a path to save a file from window, the folder path is written to 'path'
+ * Return true on success.
+ */
+bool requestSavePath(Gtk::Window* window, std::string* path);
+/**
  * Request a folder from window, the folder path is written to 'path'
  * Return true on success.
  */

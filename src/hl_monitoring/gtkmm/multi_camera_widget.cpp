@@ -67,6 +67,7 @@ void MultiCameraWidget::on_load_replay()
     video_ctrl.setTimeLimits(manager.getStart(), manager.getEnd());
     if (display_areas.count(source_name) == 0)
     {
+      source_ids[source_name] = source_id;
       display_areas[source_name] = new ImageWidget();
       activation_buttons[source_name] = new Gtk::ToggleButton(source_name);
       available_sources.add(*activation_buttons[source_name]);
@@ -98,6 +99,7 @@ void MultiCameraWidget::on_load_folder()
       manager.addImageProvider(source_name, std::move(provider));
       if (display_areas.count(source_name) == 0)
       {
+        source_ids[source_name] = source_id;
         display_areas[source_name] = new ImageWidget();
         activation_buttons[source_name] = new Gtk::ToggleButton(source_name);
         available_sources.add(*activation_buttons[source_name]);
@@ -125,7 +127,7 @@ bool MultiCameraWidget::tick()
 
 void MultiCameraWidget::step()
 {
-  bool has_changed = false;
+  bool has_window_changed = false;
   std::set<std::string> last_active_sources = active_sources;
   for (const auto& entry : activation_buttons)
   {
@@ -138,7 +140,7 @@ void MultiCameraWidget::step()
       if (was_active)
       {
         active_sources.erase(name);
-        has_changed = true;
+        has_window_changed = true;
         std::cout << "Hidding area for : " << name << std::endl;
       }
       continue;
@@ -146,22 +148,31 @@ void MultiCameraWidget::step()
 
     try
     {
-      calibrated_images[name] = manager.getCalibratedImage(name, video_ctrl.getTime());
-      display_images[name] = calibrated_images[name].getImg().clone();
-      display_area->updateImage(display_images[name]);
+      uint64_t now = video_ctrl.getTime();
+      uint64_t source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
+      // Update image only if source_ts has changed
+      if (source_ts != timestamp_by_image[name])
+      {
+        calibrated_images[name] = manager.getCalibratedImage(name, source_ts);
+        display_images[name] = calibrated_images[name].getImg().clone();
+        annotateImg(name);
+        display_area->updateImage(display_images[name]);
+        timestamp_by_image[name] = source_ts;
+      }
     }
     catch (const std::out_of_range& exc)
     {
+      std::cout << exc.what() << std::endl;
     }
     if (!was_active)
     {
       display_area->show();
       active_sources.insert(name);
-      has_changed = true;
+      has_window_changed = true;
       std::cout << "Displaying area for : " << name << std::endl;
     }
   }
-  if (has_changed)
+  if (has_window_changed)
   {
     for (const std::string& source : last_active_sources)
       image_tables.remove(*display_areas[source]);
@@ -179,6 +190,11 @@ void MultiCameraWidget::step()
       }
     }
   }
+}
+
+void MultiCameraWidget::annotateImg(const std::string& name)
+{
+  (void)name;
 }
 
 }  // namespace hl_monitoring

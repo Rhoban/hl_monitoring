@@ -55,6 +55,7 @@ void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
     sources[source_name].activation_button = new Gtk::ToggleButton(source_name);
     sources[source_name].activation_button->show();
     sources[source_name].activation_button->set_active(true);
+    available_sources.add(*sources[source_name].activation_button);
     for (auto& handler : handlers)
     {
       sources[source_name].display_area->registerClickHandler(
@@ -159,6 +160,8 @@ void MultiCameraWidget::step()
     image_tables.resize(nb_rows, nb_cols);
     for (auto& entry : sources)
     {
+      if (!entry.second.activation_button->get_active())
+        continue;
       image_tables.attach(*entry.second.display_area, col, col + 1, row, row + 1);
       col++;
       if (col == nb_cols)

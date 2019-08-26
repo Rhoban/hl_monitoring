@@ -58,7 +58,7 @@ void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
     for (auto& handler : handlers)
     {
       sources[source_name].display_area->registerClickHandler(
-          [source_name, handler](const cv::Point2f& pos) { handler(source_name, pos); });
+          [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
     }
   }
 }
@@ -195,14 +195,21 @@ std::string MultiCameraWidget::getName(const hl_communication::VideoSourceID& so
     throw std::logic_error(HL_DEBUG + "Unknown type of source");
   return source_oss.str();
 }
+uint32_t MultiCameraWidget::getFrameIndex(const hl_communication::VideoSourceID& id)
+{
+  std::string name = getName(id);
+  uint64_t time_stamp = sources[name].timestamp;
+  return manager.getImageProvider(name, time_stamp).getIndex(time_stamp);
+}
 
 void MultiCameraWidget::registerClickHandler(MouseClickHandler handler)
 {
   handlers.push_back(handler);
   for (auto& entry : sources)
   {
-    std::string name = entry.first;
-    entry.second.display_area->registerClickHandler([name, handler](const cv::Point2f& pos) { handler(name, pos); });
+    hl_communication::VideoSourceID source_id = entry.second.source_id;
+    entry.second.display_area->registerClickHandler(
+        [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
   }
 }
 

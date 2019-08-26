@@ -13,7 +13,8 @@ namespace hl_monitoring
 class MultiCameraWidget : public Gtk::VBox
 {
 public:
-  typedef std::function<void(const std::string& name, const cv::Point2f& click_pos)> MouseClickHandler;
+  typedef std::function<void(const hl_communication::VideoSourceID& source_id, const cv::Point2f& click_pos)>
+      MouseClickHandler;
   MultiCameraWidget();
   virtual ~MultiCameraWidget();
 
@@ -32,6 +33,8 @@ public:
   virtual void annotateImg(const std::string& name);
 
   static std::string getName(const hl_communication::VideoSourceID& id);
+
+  uint32_t getFrameIndex(const hl_communication::VideoSourceID& id);
 
   void registerClickHandler(MouseClickHandler handler);
 

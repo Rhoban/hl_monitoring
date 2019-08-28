@@ -55,11 +55,17 @@ void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
     sources[source_name].activation_button = new Gtk::ToggleButton(source_name);
     sources[source_name].activation_button->show();
     sources[source_name].activation_button->set_active(true);
-    available_sources.add(*sources[source_name].activation_button);
     for (auto& handler : handlers)
     {
       sources[source_name].display_area->registerClickHandler(
           [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
+    }
+    // To keep alphabetical order, each time a new source is added, all elements are removed and added
+    for (auto& entry : sources)
+    {
+      if (entry.first != source_name)
+        available_sources.remove(*entry.second.activation_button);
+      available_sources.add(*entry.second.activation_button);
     }
   }
 }
@@ -110,6 +116,7 @@ void MultiCameraWidget::step()
 {
   bool has_window_changed = false;
   std::set<std::string> last_active_sources = getActiveSources();
+  int nb_active_sources = 0;
   for (auto& entry : sources)
   {
     const std::string& name = entry.first;
@@ -124,6 +131,7 @@ void MultiCameraWidget::step()
       }
       continue;
     }
+    nb_active_sources++;
 
     try
     {
@@ -156,7 +164,9 @@ void MultiCameraWidget::step()
     for (const std::string& source : last_active_sources)
       image_tables.remove(*(sources[source].display_area));
     int row(0), col(0);
-    int nb_rows(1), nb_cols(2);
+    // TODO: ideally, nb rows and nb cols should depend on the size of widget
+    int nb_rows = std::floor(std::sqrt(nb_active_sources));
+    int nb_cols = std::ceil(std::sqrt(nb_active_sources));
     image_tables.resize(nb_rows, nb_cols);
     for (auto& entry : sources)
     {

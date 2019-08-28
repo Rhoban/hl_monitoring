@@ -3,13 +3,16 @@
 #include <hl_monitoring/replay_image_provider.h>
 #include <hl_monitoring/gtkmm/dialogs.h>
 
+#include <opencv2/imgproc.hpp>
+
 #include <iostream>
 
 using namespace hl_communication;
 
 namespace hl_monitoring
 {
-MultiCameraWidget::MultiCameraWidget() : load_replay_button("Load replay"), load_folder_button("Load folder")
+MultiCameraWidget::MultiCameraWidget()
+  : load_replay_button("Load replay"), load_folder_button("Load folder"), top_view_drawer(cv::Size(640, 480))
 {
   load_replay_button.signal_clicked().connect(sigc::mem_fun(*this, &MultiCameraWidget::on_load_replay));
   load_buttons.add(load_replay_button);
@@ -30,6 +33,23 @@ MultiCameraWidget::MultiCameraWidget() : load_replay_button("Load replay"), load
   int tick_period_ms = 30;
   sigc::slot<bool> time_slot(sigc::mem_fun(*this, &MultiCameraWidget::tick));
   Glib::signal_timeout().connect(time_slot, tick_period_ms);
+  // Adding the TopView specific source
+  std::string top_view_name = "TopView";
+  VideoSourceID top_view_id;
+  top_view_id.set_external_source(top_view_name);
+  sources[top_view_name].source_id = top_view_id;
+  sources[top_view_name].activated = true;
+  sources[top_view_name].display_area = new ImageWidget();
+  sources[top_view_name].activation_button = new Gtk::ToggleButton(top_view_name);
+  sources[top_view_name].activation_button->show();
+  sources[top_view_name].activation_button->set_active(true);
+  for (auto& handler : handlers)
+  {
+    sources[top_view_name].display_area->registerClickHandler(
+        [top_view_id, handler](const cv::Point2f& pos) { handler(top_view_id, pos); });
+  }
+  available_sources.add(*sources[top_view_name].activation_button);
+  refreshTables();
 }
 
 MultiCameraWidget::~MultiCameraWidget()
@@ -39,6 +59,32 @@ MultiCameraWidget::~MultiCameraWidget()
     delete (entry.second.display_area);
     delete (entry.second.activation_button);
   }
+}
+void MultiCameraWidget::refreshTables()
+{
+  for (const std::string& source : last_active_sources)
+    image_tables.remove(*(sources[source].display_area));
+  std::set<std::string> new_active_sources = getActiveSources();
+  int nb_active_sources = new_active_sources.size();
+  // TODO: ideally, nb rows and nb cols should depend on the size of widget
+  int nb_rows = std::max(1, (int)std::floor(std::sqrt(nb_active_sources)));
+  int nb_cols = std::max(1, (int)std::ceil(std::sqrt(nb_active_sources)));
+  image_tables.resize(nb_rows, nb_cols);
+  // Filling table
+  int row(0), col(0);
+  for (auto& entry : sources)
+  {
+    if (!entry.second.activation_button->get_active())
+      continue;
+    image_tables.attach(*entry.second.display_area, col, col + 1, row, row + 1);
+    col++;
+    if (col == nb_cols)
+    {
+      col = 0;
+      row++;
+    }
+  }
+  last_active_sources = new_active_sources;
 }
 
 void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
@@ -100,15 +146,8 @@ void MultiCameraWidget::on_load_folder()
 
 bool MultiCameraWidget::tick()
 {
-  //  if (!provider)
-  //    return true;
   video_ctrl.tickTime();
-  uint64_t now = video_ctrl.getTime();
-  // Skip updates if time hasn't changed since last tick
-  // if (now == last_tick)
-  //  return true;
   step();
-  last_tick = now;
   return true;
 }
 
@@ -116,11 +155,11 @@ void MultiCameraWidget::step()
 {
   bool has_window_changed = false;
   std::set<std::string> last_active_sources = getActiveSources();
-  int nb_active_sources = 0;
   for (auto& entry : sources)
   {
     const std::string& name = entry.first;
     SourceStatus& status = entry.second;
+    bool is_top_view = isTopViewID(status.source_id);
     if (!status.activation_button->get_active())
     {
       if (status.activated)
@@ -131,17 +170,25 @@ void MultiCameraWidget::step()
       }
       continue;
     }
-    nb_active_sources++;
 
     try
     {
       uint64_t now = video_ctrl.getTime();
-      uint64_t source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
+      uint64_t source_ts = now;
+      if (!is_top_view)
+        source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
       // Update image only if source_ts has changed
       if (source_ts != status.timestamp)
       {
-        status.calibrated_image = manager.getCalibratedImage(name, source_ts);
-        status.display_image = status.calibrated_image.getImg().clone();
+        if (is_top_view)
+        {
+          status.display_image = top_view_drawer.getImg(manager.getField());
+        }
+        else
+        {
+          status.calibrated_image = manager.getCalibratedImage(name, source_ts);
+          status.display_image = status.calibrated_image.getImg().clone();
+        }
         annotateImg(name);
         status.display_area->updateImage(status.display_image);
         status.timestamp = source_ts;
@@ -161,25 +208,7 @@ void MultiCameraWidget::step()
   }
   if (has_window_changed)
   {
-    for (const std::string& source : last_active_sources)
-      image_tables.remove(*(sources[source].display_area));
-    int row(0), col(0);
-    // TODO: ideally, nb rows and nb cols should depend on the size of widget
-    int nb_rows = std::floor(std::sqrt(nb_active_sources));
-    int nb_cols = std::ceil(std::sqrt(nb_active_sources));
-    image_tables.resize(nb_rows, nb_cols);
-    for (auto& entry : sources)
-    {
-      if (!entry.second.activation_button->get_active())
-        continue;
-      image_tables.attach(*entry.second.display_area, col, col + 1, row, row + 1);
-      col++;
-      if (col == nb_cols)
-      {
-        col = 0;
-        row++;
-      }
-    }
+    refreshTables();
   }
 }
 
@@ -195,6 +224,31 @@ std::set<std::string> MultiCameraWidget::getActiveSources() const
 void MultiCameraWidget::annotateImg(const std::string& name)
 {
   (void)name;
+  uint64_t now = video_ctrl.getTime();
+  int64_t frame_age = now - (int64_t)sources[name].timestamp;
+  cv::Mat& display_img = sources[name].display_image;
+  std::string msg;
+  if (frame_age < 0)
+  {
+    // TODO: timestamp to human?
+    msg = "Next frame in " + std::to_string(-frame_age / 1000) + " ms";
+  }
+  else if (frame_age > 500 * 1000)
+  {
+    msg = "Outdated frame: " + std::to_string(frame_age / 1000) + " ms";
+  }
+  if (msg != "")
+  {
+    int font_face = cv::FONT_HERSHEY_PLAIN;
+    double font_scale = 2.0;
+    int thickness = 2;
+    int baseline = 0;
+    cv::Point center(display_img.cols / 2, display_img.rows / 2);
+    cv::Size text_size = cv::getTextSize(msg, font_face, font_scale, thickness, &baseline);
+    cv::Point pos(center.x - text_size.width / 2, center.y - text_size.height / 2);
+    std::cout << "Drawing message to " << pos << std::endl;
+    cv::putText(display_img, msg, pos, font_face, font_scale, cv::Scalar(255, 0, 255), thickness, cv::LINE_AA);
+  }
 }
 
 std::string MultiCameraWidget::getName(const hl_communication::VideoSourceID& source_id)
@@ -224,6 +278,11 @@ void MultiCameraWidget::registerClickHandler(MouseClickHandler handler)
     entry.second.display_area->registerClickHandler(
         [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
   }
+}
+
+bool MultiCameraWidget::isTopViewID(const hl_communication::VideoSourceID& id)
+{
+  return id.has_external_source() && id.external_source() == "TopView";
 }
 
 }  // namespace hl_monitoring

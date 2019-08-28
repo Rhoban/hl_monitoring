@@ -1,7 +1,7 @@
 #pragma once
 
-#include <hl_monitoring/field.h>
 #include <hl_monitoring/monitoring_manager.h>
+#include <hl_monitoring/top_view_drawer.h>
 #include <hl_monitoring/gtkmm/image_widget.h>
 #include <hl_monitoring/gtkmm/video_controller.h>
 
@@ -38,6 +38,8 @@ public:
 
   void registerClickHandler(MouseClickHandler handler);
 
+  static bool isTopViewID(const hl_communication::VideoSourceID& id);
+
 protected:
   struct SourceStatus
   {
@@ -58,6 +60,11 @@ protected:
     cv::Mat display_image;
     uint64_t timestamp;
   };
+
+  /**
+   * Update the number of rows and columns and updates the display areas according to current state of the buttons
+   */
+  void refreshTables();
 
   /**
    * Add the given provider to the manager and updates internal representation if required
@@ -95,14 +102,22 @@ protected:
   Gtk::Button load_folder_button;
 
   std::map<std::string, SourceStatus> sources;
+  /**
+   * The list of sources actives since last refreshTables
+   */
+  std::set<std::string> last_active_sources;
 
   VideoController video_ctrl;
 
-  uint64_t last_tick;
   /**
    * Generic handlers for click inside the areas
    */
   std::vector<MouseClickHandler> handlers;
+
+  /**
+   * The drawer used to provide a top view
+   */
+  TopViewDrawer top_view_drawer;
 };
 
 }  // namespace hl_monitoring

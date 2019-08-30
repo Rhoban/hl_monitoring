@@ -12,7 +12,10 @@ using namespace hl_communication;
 namespace hl_monitoring
 {
 MultiCameraWidget::MultiCameraWidget()
-  : load_replay_button("Load replay"), load_folder_button("Load folder"), top_view_drawer(cv::Size(640, 480))
+  : load_replay_button("Load replay")
+  , load_folder_button("Load folder")
+  , top_view_drawer(cv::Size(640, 480))
+  , last_annotation(0)
 {
   load_replay_button.signal_clicked().connect(sigc::mem_fun(*this, &MultiCameraWidget::on_load_replay));
   load_buttons.add(load_replay_button);
@@ -153,63 +156,13 @@ bool MultiCameraWidget::tick()
 
 void MultiCameraWidget::step()
 {
-  bool has_window_changed = false;
-  std::set<std::string> last_active_sources = getActiveSources();
-  for (auto& entry : sources)
+  checkActivity();
+  updateCalibratedImages();
+  if (last_annotation != video_ctrl.getTime())
   {
-    const std::string& name = entry.first;
-    SourceStatus& status = entry.second;
-    bool is_top_view = isTopViewID(status.source_id);
-    if (!status.activation_button->get_active())
-    {
-      if (status.activated)
-      {
-        status.activated = false;
-        has_window_changed = true;
-        std::cout << "Hidding area for : " << name << std::endl;
-      }
-      continue;
-    }
-
-    try
-    {
-      uint64_t now = video_ctrl.getTime();
-      uint64_t source_ts = now;
-      if (!is_top_view)
-        source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
-      // Update image only if source_ts has changed
-      if (source_ts != status.timestamp)
-      {
-        if (is_top_view)
-        {
-          status.display_image = top_view_drawer.getImg(manager.getField());
-        }
-        else
-        {
-          status.calibrated_image = manager.getCalibratedImage(name, source_ts);
-          status.display_image = status.calibrated_image.getImg().clone();
-        }
-        annotateImg(name);
-        status.display_area->updateImage(status.display_image);
-        status.timestamp = source_ts;
-      }
-    }
-    catch (const std::out_of_range& exc)
-    {
-      std::cout << exc.what() << std::endl;
-    }
-    if (!status.activated)
-    {
-      status.display_area->show();
-      status.activated = true;
-      has_window_changed = true;
-      std::cout << "Displaying area for : " << name << std::endl;
-    }
+    updateAnnotations();
   }
-  if (has_window_changed)
-  {
-    refreshTables();
-  }
+  // TODO: updateAnnotations only if 'now' has changed or button has been activated
 }
 
 std::set<std::string> MultiCameraWidget::getActiveSources() const
@@ -219,6 +172,83 @@ std::set<std::string> MultiCameraWidget::getActiveSources() const
     if (entry.second.activated)
       result.insert(entry.first);
   return result;
+}
+void MultiCameraWidget::checkActivity()
+{
+  bool has_window_changed = false;
+  std::set<std::string> last_active_sources = getActiveSources();
+  for (auto& entry : sources)
+  {
+    SourceStatus& status = entry.second;
+    bool button_active = status.activation_button->get_active();
+    if (status.activated != button_active)
+    {
+      status.activated = button_active;
+      has_window_changed = true;
+      if (button_active)
+        status.display_area->show();
+      else
+        status.display_area->hide();
+    }
+  }
+  if (has_window_changed)
+  {
+    refreshTables();
+  }
+}
+
+void MultiCameraWidget::updateCalibratedImages()
+{
+  uint64_t now = video_ctrl.getTime();
+  for (auto& entry : sources)
+  {
+    const std::string& name = entry.first;
+    SourceStatus& status = entry.second;
+    if (!status.activated)
+      continue;
+    bool is_top_view = isTopViewID(status.source_id);
+    uint64_t source_ts = now;
+    try
+    {
+      if (!is_top_view)
+        source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
+      if (source_ts != status.timestamp)
+      {
+        if (is_top_view)
+        {
+          status.calibrated_image =
+              CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
+        }
+        else
+        {
+          status.calibrated_image = manager.getCalibratedImage(name, source_ts);
+        }
+        status.timestamp = source_ts;
+      }
+    }
+    catch (const std::out_of_range& exc)
+    {
+      std::cout << exc.what() << std::endl;
+    }
+  }
+}
+
+void MultiCameraWidget::updateAnnotations()
+{
+  for (auto& entry : sources)
+  {
+    const std::string& name = entry.first;
+    SourceStatus& status = entry.second;
+    if (!status.activated)
+      continue;
+    const cv::Mat& raw_img = status.calibrated_image.getImg();
+    if (raw_img.empty())
+      continue;
+    status.display_image = raw_img.clone();
+    annotateImg(name);
+    status.display_area->updateImage(status.display_image);
+  }
+  last_annotation = video_ctrl.getTime();
 }
 
 void MultiCameraWidget::annotateImg(const std::string& name)

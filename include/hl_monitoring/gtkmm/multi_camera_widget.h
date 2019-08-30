@@ -28,6 +28,20 @@ public:
   std::set<std::string> getActiveSources() const;
 
   /**
+   * Check if buttons toggling display of the videos have been used. Updates layout if necessary
+   */
+  void checkActivity();
+
+  /**
+   * Reload the source images from the videos based on current timestamp in a lazy way (i.e. images are loaded only if
+   * their timestamp differs from previous one).
+   */
+  void updateCalibratedImages();
+  /**
+   * Update the annotations on all the images displayed using the calibrated images as last source.
+   */
+  void updateAnnotations();
+  /**
    * Draws annotation on the image specified by the given name
    */
   virtual void annotateImg(const std::string& name);
@@ -118,6 +132,11 @@ protected:
    * The drawer used to provide a top view
    */
   TopViewDrawer top_view_drawer;
+
+  /**
+   * The timestamp for which annotation was performed last time
+   */
+  uint64_t last_annotation;
 };
 
 }  // namespace hl_monitoring

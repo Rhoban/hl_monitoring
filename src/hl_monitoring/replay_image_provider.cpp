@@ -60,6 +60,12 @@ void ReplayImageProvider::loadMetaInformation(const std::string& meta_informatio
     }
     pushTimeStamp(idx, time_stamp);
   }
+  if (nb_frames > 0 && meta_information.has_source_id() && !meta_information.source_id().has_utc_start())
+  {
+    std::cout << "Setting meta-information default start" << std::endl;
+    uint64_t first_frame_utc = getTS(meta_information.frames(0), true);
+    meta_information.mutable_source_id()->set_utc_start(first_frame_utc);
+  }
 }
 
 void ReplayImageProvider::setDefaultMetaInformation()

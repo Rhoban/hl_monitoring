@@ -52,6 +52,8 @@ public:
 
   static std::string getName(const hl_communication::VideoSourceID& id);
 
+  const hl_communication::VideoSourceID& getDetailedSourceID(const hl_communication::VideoSourceID& id);
+
   uint32_t getFrameIndex(const hl_communication::VideoSourceID& id);
 
   void registerClickHandler(MouseClickHandler handler);
@@ -87,7 +89,7 @@ protected:
   /**
    * Add the given provider to the manager and updates internal representation if required
    */
-  void addProvider(std::unique_ptr<ImageProvider> provider);
+  virtual void addProvider(std::unique_ptr<ImageProvider> provider);
 
   /**
    * Opens dialog box and load a window

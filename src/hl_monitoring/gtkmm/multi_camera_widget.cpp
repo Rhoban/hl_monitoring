@@ -41,7 +41,7 @@ MultiCameraWidget::MultiCameraWidget()
   VideoSourceID top_view_id;
   top_view_id.set_external_source(top_view_name);
   sources[top_view_name].source_id = top_view_id;
-  sources[top_view_name].activated = true;
+  sources[top_view_name].activated = false;
   sources[top_view_name].display_area = new ImageWidget();
   sources[top_view_name].activation_button = new Gtk::ToggleButton(top_view_name);
   sources[top_view_name].activation_button->show();
@@ -52,7 +52,7 @@ MultiCameraWidget::MultiCameraWidget()
         [top_view_id, handler](const cv::Point2f& pos) { handler(top_view_id, pos); });
   }
   available_sources.add(*sources[top_view_name].activation_button);
-  refreshTables();
+  checkActivity();
 }
 
 MultiCameraWidget::~MultiCameraWidget()
@@ -133,6 +133,9 @@ void MultiCameraWidget::on_load_replay()
       provider.reset(new ReplayImageProvider(video_file));
     addProvider(std::move(provider));
   }
+  // Updating the manager might required updating the field
+  sources["TopView"].calibrated_image =
+      CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
   // Loading a replay might require to update annotations
   step(false);
 }
@@ -147,6 +150,9 @@ void MultiCameraWidget::on_load_folder()
     for (std::unique_ptr<ImageProvider>& provider : logs)
       addProvider(std::move(provider));
   }
+  // Updating the manager might required updating the field
+  sources["TopView"].calibrated_image =
+      CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
   // Loading a folder might require to update annotations
   step(false);
 }
@@ -207,25 +213,15 @@ void MultiCameraWidget::updateCalibratedImages()
   {
     const std::string& name = entry.first;
     SourceStatus& status = entry.second;
-    if (!status.activated)
+    // Useless to acquire calibratedImages of hidden sources and TopView is only updated when the manager is modified
+    if (!status.activated || isTopViewID(status.source_id))
       continue;
-    bool is_top_view = isTopViewID(status.source_id);
-    uint64_t source_ts = now;
     try
     {
-      if (!is_top_view)
-        source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
+      uint64_t source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();
       if (source_ts != status.timestamp)
       {
-        if (is_top_view)
-        {
-          status.calibrated_image =
-              CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
-        }
-        else
-        {
-          status.calibrated_image = manager.getCalibratedImage(name, source_ts);
-        }
+        status.calibrated_image = manager.getCalibratedImage(name, source_ts);
         status.timestamp = source_ts;
       }
     }
@@ -256,7 +252,9 @@ void MultiCameraWidget::updateAnnotations()
 
 void MultiCameraWidget::annotateImg(const std::string& name)
 {
-  (void)name;
+  // Do not annotate 'obsolete' topview
+  if (name == "TopView")
+    return;
   uint64_t now = video_ctrl.getTime();
   int64_t frame_age = now - (int64_t)sources[name].timestamp;
   cv::Mat& display_img = sources[name].display_image;
@@ -281,6 +279,11 @@ void MultiCameraWidget::annotateImg(const std::string& name)
     std::cout << "Drawing message to " << pos << std::endl;
     cv::putText(display_img, msg, pos, font_face, font_scale, cv::Scalar(255, 0, 255), thickness, cv::LINE_AA);
   }
+}
+const hl_communication::VideoSourceID& MultiCameraWidget::getDetailedSourceID(const hl_communication::VideoSourceID& id)
+{
+  uint64_t now = video_ctrl.getTime();
+  return manager.getImageProvider(getName(id), now).getMetaInformation().source_id();
 }
 
 std::string MultiCameraWidget::getName(const hl_communication::VideoSourceID& source_id)

@@ -263,12 +263,11 @@ void MultiCameraWidget::annotateImg(const std::string& name)
   std::string msg;
   if (frame_age < 0)
   {
-    // TODO: timestamp to human?
-    msg = "Next frame in " + std::to_string(-frame_age / 1000) + " ms";
+    msg = "Next frame in " + hl_communication::getPrettyDuration(-frame_age);
   }
   else if (frame_age > 500 * 1000)
   {
-    msg = "Outdated frame: " + std::to_string(frame_age / 1000) + " ms";
+    msg = "Outdated frame: " + hl_communication::getPrettyDuration(frame_age);
   }
   if (msg != "")
   {

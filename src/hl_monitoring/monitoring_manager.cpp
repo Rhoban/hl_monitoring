@@ -256,8 +256,7 @@ CalibratedImage MonitoringManager::getCalibratedImage(const std::string& provide
   if (external_providers.count(provider_name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name + "'");
   if (external_providers.at(provider_name).begin()->second->getStart() > time_stamp)
-    throw std::out_of_range(HL_DEBUG + " no image provider named '" + provider_name +
-                            "' for the given time_stamp: " + std::to_string(time_stamp));
+    return external_providers.at(provider_name).begin()->second->getCalibratedImage(time_stamp);
   if (external_providers.at(provider_name).rbegin()->second->getStart() <= time_stamp)
     return external_providers.at(provider_name).rbegin()->second->getCalibratedImage(time_stamp);
   auto it = external_providers.at(provider_name).upper_bound(time_stamp);
@@ -306,8 +305,7 @@ const ImageProvider& MonitoringManager::getImageProvider(const std::string& name
   if (external_providers.count(name) == 0)
     throw std::out_of_range(HL_DEBUG + " no image provider named '" + name + "'");
   if (external_providers.at(name).begin()->second->getStart() > time_stamp)
-    throw std::out_of_range(HL_DEBUG + " no image provider named '" + name +
-                            "' for the given time_stamp: " + std::to_string(time_stamp));
+    return *(external_providers.at(name).begin()->second);
   if (external_providers.at(name).rbegin()->second->getStart() <= time_stamp)
     return *(external_providers.at(name).rbegin()->second);
   auto it = external_providers.at(name).upper_bound(time_stamp);

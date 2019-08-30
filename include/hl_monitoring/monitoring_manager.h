@@ -67,6 +67,11 @@ public:
    * throws std::out_of_range if name is not valid or if multiple providers with the same name exists
    */
   const ImageProvider& getImageProvider(const std::string& name) const;
+  /**
+   * Throws std::out_of_range in case 'name' does not exist. Otherwise, returns the image_provider corresponding to the
+   * given timestamp. If time_stamp is before all image_providers, returns access to the first image provider
+   * (chronologically)
+   */
   const ImageProvider& getImageProvider(const std::string& name, uint64_t time_stamp) const;
 
   std::set<std::string> getImageProvidersNames() const;

@@ -130,10 +130,10 @@ void ImageProvider::pushTimeStamp(int idx, uint64_t time_stamp)
 
 int ImageProvider::getIndex(uint64_t time_stamp) const
 {
-  if (indices_by_time_stamp.size() == 0 || indices_by_time_stamp.begin()->first > time_stamp)
-  {
+  if (indices_by_time_stamp.size() == 0)
     return -1;
-  }
+  else if (indices_by_time_stamp.begin()->first > time_stamp)
+    return 0;
   auto it = indices_by_time_stamp.upper_bound(time_stamp);
   if (it == indices_by_time_stamp.end() || it->first > time_stamp)
   {

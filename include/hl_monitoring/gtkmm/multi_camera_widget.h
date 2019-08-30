@@ -20,7 +20,11 @@ public:
 
   bool tick();
 
-  void step();
+  /**
+   * If lazy annotations is enabled, update annotations only if the timestamp of the videoControl has changed since last
+   * annotation's update
+   */
+  void step(bool lazy_annotations = true);
 
   /**
    * Returns a list of all the active sources

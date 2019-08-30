@@ -133,6 +133,8 @@ void MultiCameraWidget::on_load_replay()
       provider.reset(new ReplayImageProvider(video_file));
     addProvider(std::move(provider));
   }
+  // Loading a replay might require to update annotations
+  step(false);
 }
 
 void MultiCameraWidget::on_load_folder()
@@ -145,6 +147,8 @@ void MultiCameraWidget::on_load_folder()
     for (std::unique_ptr<ImageProvider>& provider : logs)
       addProvider(std::move(provider));
   }
+  // Loading a folder might require to update annotations
+  step(false);
 }
 
 bool MultiCameraWidget::tick()
@@ -154,15 +158,14 @@ bool MultiCameraWidget::tick()
   return true;
 }
 
-void MultiCameraWidget::step()
+void MultiCameraWidget::step(bool lazy_annotations)
 {
   checkActivity();
   updateCalibratedImages();
-  if (last_annotation != video_ctrl.getTime())
+  if (!lazy_annotations || last_annotation != video_ctrl.getTime())
   {
     updateAnnotations();
   }
-  // TODO: updateAnnotations only if 'now' has changed or button has been activated
 }
 
 std::set<std::string> MultiCameraWidget::getActiveSources() const

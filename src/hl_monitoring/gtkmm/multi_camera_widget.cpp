@@ -282,6 +282,8 @@ void MultiCameraWidget::annotateImg(const std::string& name)
 }
 const hl_communication::VideoSourceID& MultiCameraWidget::getDetailedSourceID(const hl_communication::VideoSourceID& id)
 {
+  if (isTopViewID(id))
+    return id;
   uint64_t now = video_ctrl.getTime();
   return manager.getImageProvider(getName(id), now).getMetaInformation().source_id();
 }

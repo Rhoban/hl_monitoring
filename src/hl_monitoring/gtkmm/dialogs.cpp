@@ -6,6 +6,14 @@
 
 namespace hl_monitoring
 {
+Gtk::Window* getWindow(Gtk::Widget* widget)
+{
+  Gtk::Window* top = dynamic_cast<Gtk::Window*>(widget->get_toplevel());
+  if (top == nullptr)
+    throw std::runtime_error("Trying to get window of an isolated widget");
+  return top;
+}
+
 bool requestSavePath(Gtk::Window* window, std::string* path)
 {
   Gtk::FileChooserDialog dialog("Choose log folder", Gtk::FILE_CHOOSER_ACTION_SAVE);
@@ -94,6 +102,16 @@ bool requestVideoFile(Gtk::Window* window, std::string* path)
 bool requestProtobufFile(Gtk::Window* window, std::string* path)
 {
   return requestFile(window, "protobuf file", { "*.pb", "*.bin" }, path);
+}
+
+void showMessage(Gtk::Window* window, const std::string& msg, const std::string& detailed_msg, Gtk::MessageType type)
+{
+  Gtk::MessageDialog dialog(*window, msg, false, type);
+  if (detailed_msg != "")
+  {
+    dialog.set_secondary_text(detailed_msg);
+  }
+  dialog.run();
 }
 
 }  // namespace hl_monitoring

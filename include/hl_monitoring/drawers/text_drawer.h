@@ -21,6 +21,10 @@ public:
   void setColor(const cv::Scalar& new_color);
   void setImgOffset(const cv::Point2f& new_offset);
 
+  static void drawCenteredText(cv::Mat* out, const std::string& msg, const cv::Point2f& img_pos,
+                               const cv::Scalar& color = cv::Scalar(0, 0, 0), int thickness = 1,
+                               double font_scale = 1.0, int font_face = cv::HersheyFonts::FONT_HERSHEY_SIMPLEX);
+
 private:
   /**
    * Can be used to have an offset in the image in order to avoid writing the text over an existing feature

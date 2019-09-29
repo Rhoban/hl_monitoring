@@ -34,6 +34,11 @@ public:
   Glib::ustring on_timebar_format_value(double value);
   bool on_timebar_change_value(Gtk::ScrollType scroll, double new_value);
 
+  /**
+   * Ensure that the video_controller is paused
+   */
+  void force_pause();
+
 private:
   /**
    * Return t bounded by start and end of the current time frame

@@ -85,6 +85,12 @@ bool VideoController::on_timebar_change_value(Gtk::ScrollType scroll, double new
   return true;
 }
 
+void VideoController::force_pause()
+{
+  is_playing = false;
+  updatePlayButton();
+}
+
 uint64_t VideoController::boundTime(uint64_t t) const
 {
   return std::min(end, std::max(start, t));

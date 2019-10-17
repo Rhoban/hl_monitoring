@@ -5,6 +5,7 @@
 #include <hl_monitoring/opencv_image_provider.h>
 #include <hl_monitoring/replay_image_provider.h>
 
+#include <experimental/filesystem>  // Due to gcc version
 #include <fstream>
 #include <iostream>
 
@@ -14,6 +15,8 @@
 #ifdef HL_MONITORING_USES_FLYCAPTURE
 #include <hl_monitoring/flycap_image_provider.h>
 #endif
+
+namespace fs = std::experimental::filesystem;
 
 using namespace hl_communication;
 
@@ -211,6 +214,24 @@ void MonitoringManager::loadMessageManager(const Json::Value& v)
   else
   {
     message_manager.reset(new MessageManager(file_path));
+  }
+}
+
+void MonitoringManager::loadFolder(const std::string& folder)
+{
+  std::vector<fs::path> message_collection_paths;
+  for (auto& p : fs::recursive_directory_iterator(folder))
+  {
+    const fs::path& path = p.path();
+    if (path.filename() == "messages.pb")
+      message_collection_paths.push_back(path);
+  }
+  for (const fs::path& messages_path : message_collection_paths)
+  {
+    if (!message_manager)
+      message_manager.reset(new MessageManager(messages_path.string()));
+    else
+      message_manager->loadMessages(messages_path.string());
   }
 }
 

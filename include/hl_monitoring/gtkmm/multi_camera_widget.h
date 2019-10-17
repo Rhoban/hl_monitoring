@@ -31,6 +31,8 @@ public:
    */
   std::set<std::string> getActiveSources() const;
 
+  const MonitoringManager& getMonitoringManager() const;
+
   /**
    * Check if buttons toggling display of the videos have been used. Updates layout if necessary
    */
@@ -59,6 +61,11 @@ public:
   void registerClickHandler(MouseClickHandler handler);
 
   static bool isTopViewID(const hl_communication::VideoSourceID& id);
+
+  /**
+   * Signal sent each time a new manager is loaded
+   */
+  sigc::signal<void> signal_manager_loaded();
 
 protected:
   struct SourceStatus
@@ -143,6 +150,8 @@ protected:
    * The timestamp for which annotation was performed last time
    */
   uint64_t last_annotation;
+
+  sigc::signal<void> manager_loaded_signal;
 };
 
 }  // namespace hl_monitoring

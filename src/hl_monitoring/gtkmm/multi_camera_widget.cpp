@@ -138,6 +138,7 @@ void MultiCameraWidget::on_load_replay()
       CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
   // Loading a replay might require to update annotations
   step(false);
+  manager_loaded_signal.emit();
 }
 
 void MultiCameraWidget::on_load_folder()
@@ -146,6 +147,7 @@ void MultiCameraWidget::on_load_folder()
   Gtk::Window* window = (Gtk::Window*)get_toplevel();
   if (requestFolder(window, &log_folder))
   {
+    manager.loadFolder(log_folder);
     std::vector<std::unique_ptr<ImageProvider>> logs = ReplayImageProvider::loadReplays(log_folder);
     for (std::unique_ptr<ImageProvider>& provider : logs)
       addProvider(std::move(provider));
@@ -155,6 +157,7 @@ void MultiCameraWidget::on_load_folder()
       CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
   // Loading a folder might require to update annotations
   step(false);
+  manager_loaded_signal.emit();
 }
 
 bool MultiCameraWidget::tick()
@@ -182,6 +185,12 @@ std::set<std::string> MultiCameraWidget::getActiveSources() const
       result.insert(entry.first);
   return result;
 }
+
+const MonitoringManager& MultiCameraWidget::getMonitoringManager() const
+{
+  return manager;
+}
+
 void MultiCameraWidget::checkActivity()
 {
   bool has_window_changed = false;
@@ -320,6 +329,11 @@ void MultiCameraWidget::registerClickHandler(MouseClickHandler handler)
 bool MultiCameraWidget::isTopViewID(const hl_communication::VideoSourceID& id)
 {
   return id.has_external_source() && id.external_source() == "TopView";
+}
+
+sigc::signal<void> MultiCameraWidget::signal_manager_loaded()
+{
+  return manager_loaded_signal;
 }
 
 }  // namespace hl_monitoring

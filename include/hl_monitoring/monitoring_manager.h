@@ -44,6 +44,8 @@ public:
   void loadImageProviders(const Json::Value& v);
   void loadMessageManager(const Json::Value& v);
 
+  void loadFolder(const std::string& folder);
+
   void setMessageManager(std::unique_ptr<hl_communication::MessageManager> message_manager);
   /**
    * Only use this for external cameras

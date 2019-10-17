@@ -153,6 +153,7 @@ std::vector<std::unique_ptr<ImageProvider>> ReplayImageProvider::loadReplays(con
 {
   std::vector<std::unique_ptr<ImageProvider>> providers;
   std::vector<fs::path> movie_paths;
+  std::vector<fs::path> message_collection_paths;
   for (auto& p : fs::recursive_directory_iterator(folder))
   {
     const fs::path& path = p.path();

@@ -136,6 +136,7 @@ void MultiCameraWidget::on_load_replay()
   // Updating the manager might required updating the field
   sources["TopView"].calibrated_image =
       CalibratedImage(top_view_drawer.getImg(manager.getField()), hl_communication::CameraMetaInformation());
+  sources["TopView"].timestamp = video_ctrl.getTime();
   // Loading a replay might require to update annotations
   step(false);
   manager_loaded_signal.emit();
@@ -222,9 +223,15 @@ void MultiCameraWidget::updateCalibratedImages()
   {
     const std::string& name = entry.first;
     SourceStatus& status = entry.second;
-    // Useless to acquire calibratedImages of hidden sources and TopView is only updated when the manager is modified
-    if (!status.activated || isTopViewID(status.source_id))
+    // Useless to update calibratedImages of hidden sources
+    if (!status.activated)
       continue;
+    // For TopView Image, only update the timestamp of the image
+    if (isTopViewID(status.source_id))
+    {
+      status.timestamp = now;
+      continue;
+    }
     try
     {
       uint64_t source_ts = manager.getImageProvider(name, now).getFrameEntry(now).utc_ts();

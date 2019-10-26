@@ -88,6 +88,7 @@ void MultiCameraWidget::refreshTables()
     }
   }
   last_active_sources = new_active_sources;
+  std::cout << "Refreshing tables" << std::endl;
 }
 
 void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)

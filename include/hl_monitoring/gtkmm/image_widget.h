@@ -18,9 +18,20 @@ public:
   void updateImage(const cv::Mat& img);
 
   void registerClickHandler(MouseClickHandler handler);
+
   void on_size_allocate(Gtk::Allocation& allocation) override;
 
   bool on_mouse_button_press(GdkEventButton* event);
+
+  /**
+   * Return the size of the display image
+   */
+  cv::Size getImgSize() const;
+
+  /**
+   * Updates the scale ratio for the display image based on allocated size
+   */
+  void updateDisplayScale(int allocated_width, int allocated_height);
 
 private:
   void updatePixbuf();

@@ -16,18 +16,15 @@ ImageWidget::ImageWidget() : display_scale(1.0), offset_x(0), offset_y(0)
 void ImageWidget::on_size_allocate(Gtk::Allocation& allocation)
 {
   Gtk::EventBox::on_size_allocate(allocation);
+  set_allocation(allocation);
   if (hasImage())
   {
-    double height_ratio = allocation.get_height() / (double)(rgb_img.rows);
-    double width_ratio = allocation.get_width() / (double)(rgb_img.cols);
-    display_scale = std::min(width_ratio, height_ratio);
-    cv::Size dst_size(display_scale * rgb_img.cols, display_scale * rgb_img.rows);
+    updateDisplayScale(allocation.get_width(), allocation.get_height());
+    cv::Size dst_size = getImgSize();
     cv::Size current_size(scaled_img.cols, scaled_img.rows);
     // Note: there seems to be a 1 px incompressible margin which is not related to:
     // - border from parent
     // - padding from Gtk::Image
-    offset_x = (allocation.get_width() - dst_size.width) / 2;
-    offset_y = (allocation.get_height() - dst_size.height) / 2;
     if (dst_size != current_size)
     {
       cv::resize(rgb_img, scaled_img, dst_size);
@@ -62,13 +59,33 @@ void ImageWidget::updateImage(const cv::Mat& img)
   if (img.channels() != 3)
     throw std::logic_error("Only 3 channels mat are accepted currently");
   cv::cvtColor(img, rgb_img, CV_BGR2RGB);
-  scaled_img = rgb_img;
+  updateDisplayScale(get_width(), get_height());
+  cv::Size current_size(rgb_img.cols, rgb_img.rows);
+  cv::Size dst_size = getImgSize();
+  cv::resize(rgb_img, scaled_img, dst_size);
   updatePixbuf();
 }
 
 void ImageWidget::registerClickHandler(MouseClickHandler handler)
 {
   click_handlers.push_back(handler);
+}
+
+cv::Size ImageWidget::getImgSize() const
+{
+  int dst_width = std::max(1, (int)(display_scale * rgb_img.cols));
+  int dst_height = std::max(1, (int)(display_scale * rgb_img.rows));
+  return cv::Size(dst_width, dst_height);
+}
+
+void ImageWidget::updateDisplayScale(int allocated_width, int allocated_height)
+{
+  double height_ratio = allocated_height / (double)(rgb_img.rows);
+  double width_ratio = allocated_width / (double)(rgb_img.cols);
+  display_scale = std::min(width_ratio, height_ratio);
+  cv::Size dst_size = getImgSize();
+  offset_x = (allocated_width - dst_size.width) / 2;
+  offset_y = (allocated_height - dst_size.height) / 2;
 }
 
 void ImageWidget::updatePixbuf()

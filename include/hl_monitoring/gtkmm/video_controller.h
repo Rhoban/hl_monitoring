@@ -6,7 +6,7 @@ namespace hl_monitoring
 {
 /**
  * A widget allowing to control time over a video, it provides a trackbar with a slider as well as play/pause and fast
- * forward/backward buttons
+ * forward/rewind buttons
  *
  * It is the responsability of the parent to tick the VideoController regularly to update current time
  *
@@ -34,6 +34,9 @@ public:
   Glib::ustring on_timebar_format_value(double value);
   bool on_timebar_change_value(Gtk::ScrollType scroll, double new_value);
 
+  void on_forward();
+  void on_rewind();
+
   /**
    * Ensure that the video_controller is paused
    */
@@ -57,6 +60,8 @@ private:
   Gtk::HScale time_bar;
 
   Gtk::ToggleButton play_button;
+  Gtk::Button rewind_button;
+  Gtk::Button forward_button;
 
   Gtk::Image play_img;
 

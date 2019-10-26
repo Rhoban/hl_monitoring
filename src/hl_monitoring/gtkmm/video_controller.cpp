@@ -8,7 +8,14 @@ using namespace std;
 
 namespace hl_monitoring
 {
-VideoController::VideoController() : start(0), end(0), now(0), speed(1.0), is_playing(false)
+VideoController::VideoController()
+  : rewind_button(Gtk::Stock::MEDIA_REWIND)
+  , forward_button(Gtk::Stock::MEDIA_FORWARD)
+  , start(0)
+  , end(0)
+  , now(0)
+  , speed(1.0)
+  , is_playing(false)
 {
   updatePlayButton();
   add(time_bar);
@@ -17,9 +24,17 @@ VideoController::VideoController() : start(0), end(0), now(0), speed(1.0), is_pl
   time_bar.signal_change_value().connect(sigc::mem_fun(*this, &VideoController::on_timebar_change_value));
   // Custom steps: basic increment -> 20ms, page_up/page_down -> 5 sec
   time_bar.set_increments(0.02, 5.0);
+  // Buttons
+  add(rewind_button);
+  rewind_button.show();
+  rewind_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_rewind));
   add(play_button);
   play_button.show();
   play_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_play_toggle));
+  add(forward_button);
+  forward_button.show();
+  forward_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_forward));
+  // Initialize with current time as default
   last_tick = hl_communication::getTimeStamp();
 }
 
@@ -59,6 +74,28 @@ uint64_t VideoController::getTime() const
 void VideoController::on_play_toggle()
 {
   is_playing = play_button.get_active();
+  if (is_playing)
+    speed = 1;
+  updatePlayButton();
+}
+
+void VideoController::on_rewind()
+{
+  if (speed >= 0)
+    speed = -2;
+  else
+    speed *= 2;
+  play_button.set_active();
+  updatePlayButton();
+}
+
+void VideoController::on_forward()
+{
+  if (speed <= 0)
+    speed = 2;
+  else
+    speed *= 2;
+  play_button.set_active();
   updatePlayButton();
 }
 

@@ -18,22 +18,21 @@ VideoController::VideoController()
   , is_playing(false)
 {
   updatePlayButton();
-  add(time_bar);
-  time_bar.show();
   time_bar.signal_format_value().connect(sigc::mem_fun(*this, &VideoController::on_timebar_format_value));
   time_bar.signal_change_value().connect(sigc::mem_fun(*this, &VideoController::on_timebar_change_value));
   // Custom steps: basic increment -> 20ms, page_up/page_down -> 5 sec
   time_bar.set_increments(0.02, 5.0);
-  // Buttons
-  add(rewind_button);
-  rewind_button.show();
+  // Connecting buttons signals
   rewind_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_rewind));
-  add(play_button);
-  play_button.show();
   play_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_play_toggle));
-  add(forward_button);
-  forward_button.show();
   forward_button.signal_clicked().connect(sigc::mem_fun(*this, &VideoController::on_forward));
+  // Setting position of different elements
+  resize(2, 3);
+  attach(time_bar, 0, 3, 0, 1);
+  attach(rewind_button, 0, 1, 1, 2);
+  attach(play_button, 1, 2, 1, 2);
+  attach(forward_button, 2, 3, 1, 2);
+  show_all_children();
   // Initialize with current time as default
   last_tick = hl_communication::getTimeStamp();
 }

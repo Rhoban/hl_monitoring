@@ -12,7 +12,7 @@ namespace hl_monitoring
  *
  * TODO: Code associated with the play/pause button could be extracted
  */
-class VideoController : public Gtk::VBox
+class VideoController : public Gtk::Table
 {
 public:
   VideoController();

@@ -10,7 +10,7 @@ public:
   /**
    * Event handler receiving position of click inside image referential
    */
-  typedef std::function<void(cv::Point2f)> MouseClickHandler;
+  typedef std::function<void(int button, const cv::Point2f& click_pos)> MouseClickHandler;
 
   ImageWidget();
 

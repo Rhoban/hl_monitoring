@@ -16,6 +16,7 @@ namespace hl_monitoring
 PlayerDrawer::PlayerDrawer()
   : target_drawer(ArrowDrawer::ArrowCross, 1.0), color(0, 0, 0), ball_enabled(false), opponents_enabled(false)
 {
+  name_drawer.setFontScale(0.7);
 }
 
 PlayerDrawer::~PlayerDrawer()
@@ -40,7 +41,7 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
 
         int robot_id = robot.robot_id().robot_id();
 
-        name_drawer.setImgOffset(cv::Point2f(0, 30));
+        name_drawer.setImgOffset(cv::Point2f(0, 15));
         name_drawer.draw(converter, { robot_pos, std::to_string(robot_id) }, out);
       }
 
@@ -48,8 +49,6 @@ void PlayerDrawer::draw(FieldToImgConverter converter, const RobotMsg& robot, cv
       const PoseDistribution& pose = weighted_pose.pose();
       const PositionDistribution& position = pose.position();
       cv::Point3f robot_pos(position.x(), position.y(), 0);
-
-      int robot_id = robot.robot_id().robot_id();
 
       // Drawing intention
       // TODO: take into account waypoints

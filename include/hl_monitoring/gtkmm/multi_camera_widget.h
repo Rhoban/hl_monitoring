@@ -13,7 +13,8 @@ namespace hl_monitoring
 class MultiCameraWidget : public Gtk::VBox
 {
 public:
-  typedef std::function<void(const hl_communication::VideoSourceID& source_id, const cv::Point2f& click_pos)>
+  typedef std::function<void(const hl_communication::VideoSourceID& source_id, int button,
+                             const cv::Point2f& click_pos)>
       MouseClickHandler;
   MultiCameraWidget();
   virtual ~MultiCameraWidget();

@@ -35,15 +35,15 @@ void ImageWidget::on_size_allocate(Gtk::Allocation& allocation)
 
 bool ImageWidget::on_mouse_button_press(GdkEventButton* event)
 {
-  if (event->button == 1)  // TODO: extract macro from GDK specifiying button name
+  if (event->button != 0)
   {
     double img_x = (event->x - offset_x) / display_scale;
     double img_y = (event->y - offset_y) / display_scale;
-    std::cout << "left button was pressed at (" << event->x << "," << event->y << ") -> img: (" << img_x << ", "
-              << img_y << ")" << std::endl;
+    std::cout << "Button " << event->button << " pressed at (" << event->x << "," << event->y << ") -> img: (" << img_x
+              << ", " << img_y << ")" << std::endl;
     for (const MouseClickHandler& handler : click_handlers)
     {
-      handler(cv::Point2f(img_x, img_y));
+      handler(event->button, cv::Point2f(img_x, img_y));
     }
   }
   return true;

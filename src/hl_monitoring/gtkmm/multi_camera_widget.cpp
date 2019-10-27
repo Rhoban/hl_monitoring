@@ -49,7 +49,7 @@ MultiCameraWidget::MultiCameraWidget()
   for (auto& handler : handlers)
   {
     sources[top_view_name].display_area->registerClickHandler(
-        [top_view_id, handler](const cv::Point2f& pos) { handler(top_view_id, pos); });
+        [top_view_id, handler](int button, const cv::Point2f& pos) { handler(top_view_id, button, pos); });
   }
   available_sources.add(*sources[top_view_name].activation_button);
   checkActivity();
@@ -108,7 +108,7 @@ void MultiCameraWidget::addProvider(std::unique_ptr<ImageProvider> provider)
     for (auto& handler : handlers)
     {
       sources[source_name].display_area->registerClickHandler(
-          [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
+          [source_id, handler](int button, const cv::Point2f& pos) { handler(source_id, button, pos); });
     }
     // To keep alphabetical order, each time a new source is added, all elements are removed and added
     for (auto& entry : sources)
@@ -330,7 +330,7 @@ void MultiCameraWidget::registerClickHandler(MouseClickHandler handler)
   {
     hl_communication::VideoSourceID source_id = entry.second.source_id;
     entry.second.display_area->registerClickHandler(
-        [source_id, handler](const cv::Point2f& pos) { handler(source_id, pos); });
+        [source_id, handler](int button, const cv::Point2f& pos) { handler(source_id, button, pos); });
   }
 }
 

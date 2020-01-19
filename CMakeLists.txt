@@ -9,7 +9,7 @@ find_package(PkgConfig)
 pkg_check_modules(GTKMM gtkmm-2.4)
 
 # Require an external dependency to flycapture library
-option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" ON)
+option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" OFF)
 
 #Enable C++17
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")
@@ -34,11 +34,6 @@ if (HL_MONITORING_USES_FLYCAPTURE)
     flycapture
     )
 endif(HL_MONITORING_USES_FLYCAPTURE)
-
-set (DELEGATE_LIBRARIES
-  ${DELEGATE_LIBRARIES}
-  flycapture
-  )
 
 catkin_package(
   INCLUDE_DIRS ${DELEGATE_INCLUDE_DIRS}

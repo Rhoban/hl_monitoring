@@ -325,7 +325,7 @@ void Field::tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& dis
         cv::Point3f camera_pos = hl_communication::fieldToCamera(field_positions[idx], rvec, tvec);
         if (camera_pos.z > 0 && img_rect.contains(img_points[idx]))
         {
-          cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), CV_FILLED);
+          cv::circle(*tag_img, img_points[idx], 5, cv::Scalar(255, 0, 255), cv::FILLED);
         }
       }
     }

@@ -69,7 +69,7 @@ void PoseDrawer::draw(FieldToImgConverter converter, const hl_communication::Pos
     getEllipsePoint(converter, field_pos, nbPoint, angle, axes, 0, 2 * M_PI, &ellipsePoints);
 
     cv::RotatedRect ellipse = fitEllipse(ellipsePoints);
-    cv::ellipse(overlay, ellipse, color, CV_FILLED, cv::LINE_AA);
+    cv::ellipse(overlay, ellipse, color, cv::FILLED, cv::LINE_AA);
 
     if (pose.has_dir() && pose.dir().has_std_dev())
     {

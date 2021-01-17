@@ -6,7 +6,9 @@ find_package(catkin REQUIRED COMPONENTS
   )
 
 # Require an external dependency to flycapture library
-option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" ON)
+# FlyCapture is not officially supported on Ubuntu 20.04: need to move to Spinnaker
+# - See: https://www.flir.com/support-center/iis/machine-vision/downloads/spinnaker-sdk-flycapture-and-firmware-download/
+option(HL_MONITORING_USES_FLYCAPTURE "Use flycapture to build the sources" OFF)
 
 #Enable C++17
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -std=c++17")

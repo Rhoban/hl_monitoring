@@ -34,11 +34,12 @@ ReplayViewer::ReplayViewer(std::unique_ptr<ReplayImageProvider> image_provider, 
   addBinding('b', "Set playing direction to backward", [this]() { this->setSpeed(-std::fabs(this->speed)); });
   addBinding('f', "Set playing direction to forward", [this]() { this->setSpeed(std::fabs(this->speed)); });
   // TODO: add mouse handler
-  cv::setMouseCallback(window_name,
-                       [](int event, int x, int y, int flags, void* ptr) -> void {
-                         ((ReplayViewer*)ptr)->treatMouseEvent(event, x, y, flags);
-                       },
-                       this);
+  cv::setMouseCallback(
+      window_name,
+      [](int event, int x, int y, int flags, void* ptr) -> void {
+        ((ReplayViewer*)ptr)->treatMouseEvent(event, x, y, flags);
+      },
+      this);
 }
 
 ReplayViewer::~ReplayViewer()
@@ -58,9 +59,9 @@ void ReplayViewer::run()
     uint64_t end = getTimeStamp();
     int elapsed_ms = (end - start) / 1000;
     int wait_time_ms = std::max(5, 33 - elapsed_ms);  // 30 fps as default display
-    int key(255);                                     // Default value when no key is pressed
+    int key(-1);                                      // Default value when no key is pressed
     key = cv::waitKey(wait_time_ms);
-    if (key != 255)
+    if (key != -1)
     {
       try
       {
@@ -68,6 +69,7 @@ void ReplayViewer::run()
       }
       catch (const std::out_of_range& o)
       {
+        std::cerr << "Received key event: " << keyCode2Str(key) << " unknown, printing help" << std::endl;
         printHelp();
       }
     }
@@ -84,7 +86,7 @@ void ReplayViewer::printHelp()
 
 std::string ReplayViewer::keyCode2Str(int key)
 {
-  if (key <= 255)
+  if (key >= 0 && key <= 255)
   {
     std::string result;
     result = (char)key;

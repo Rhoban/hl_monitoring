@@ -43,6 +43,11 @@ private:
   void onClick(int event, int x, int y, void* param);
 
   /**
+   * Display a help message on standard output indicating the different ways to interact with the ManualPoseSolver
+   */
+  void printHelp() const;
+
+  /**
    * The model of the field used for calibration
    */
   Field field;

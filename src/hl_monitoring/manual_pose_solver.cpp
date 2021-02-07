@@ -23,11 +23,12 @@ ManualPoseSolver::ManualPoseSolver(const cv::Mat& img, const IntrinsicParameters
   }
 
   cv::namedWindow("manual_pose_solver", cv::WINDOW_NORMAL);
-  cv::setMouseCallback("manual_pose_solver",
-                       [](int event, int x, int y, int, void* param) -> void {
-                         ((ManualPoseSolver*)param)->onClick(event, x, y, param);
-                       },
-                       this);
+  cv::setMouseCallback(
+      "manual_pose_solver",
+      [](int event, int x, int y, int, void* param) -> void {
+        ((ManualPoseSolver*)param)->onClick(event, x, y, param);
+      },
+      this);
 }
 
 ManualPoseSolver::~ManualPoseSolver()
@@ -155,6 +156,8 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
 
     cv::imshow("manual_pose_solver", display_img);
     char key = cv::waitKey(20);
+    if (key == (char)255)
+      continue;
     switch (key)
     {
       case 'q':  // Quit
@@ -171,7 +174,12 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
           updatePose();
         }
         break;
-        // TODO: add help on 'h'
+      case 'h':
+        printHelp();
+        break;
+      default:
+        std::cout << "unknown key pressed" << std::endl;
+        printHelp();
     }
   }
   if (points_in_img.size() >= 4)
@@ -218,6 +226,26 @@ void ManualPoseSolver::tryDrawHelper(const cv::Mat& rvec, const cv::Mat& tvec, c
     cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coefficients, img_points);
     cv::circle(*img, img_points[0], 10, color, 3, cv::LINE_AA);
   }
+}
+
+void ManualPoseSolver::printHelp() const
+{
+  std::cout << "-------------------------" << std::endl
+            << "| ManualPoseSolver Help |" << std::endl
+            << "-------------------------" << std::endl;
+  std::cout << "Some elements are added to the initial image based on the following code:" << std::endl
+            << "- Color: black shows initial guess and magenta shows current estimate according to specified points"
+            << std::endl
+            << "         (only applicable if at least 4 points are provided)" << std::endl
+            << "- Lines represents the markings of the fields" << std::endl
+            << "- Circles indicates the point which is currently requested (only drawn if inside the image)"
+            << std::endl;
+  std::cout << "Key actions are as follows:" << std::endl;
+  std::cout << "'q': Quit the active process and ends with the points specified until now." << std::endl;
+  std::cout << "'i': Ignore the point currently indicated by text." << std::endl;
+  std::cout << "'c': Go back to previous point proposed and remove the correspondance if it was added by the user."
+            << std::endl;
+  std::cout << "'h': print this help." << std::endl;
 }
 
 }  // namespace hl_monitoring

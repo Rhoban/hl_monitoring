@@ -113,12 +113,15 @@ void ManualPoseSolver::onClick(int event, int x, int y, void* param)
 bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_guess)
 {
   bool exit = false;
+  const int space_for_overview = 200;
+
   while (!exit)
   {
     cv::Mat display_img = calibration_img.clone();
     cv::Mat drawing_img = display_img.clone();
     cv::Scalar drawing_color(255, 0, 255);
     cv::Scalar guess_color(0, 0, 0);
+
     if (has_guess)
     {
       field.tagLines(camera_matrix, distortion_coefficients, *rvec_out, *tvec_out, &drawing_img, guess_color, 2.0, 30);
@@ -154,7 +157,13 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
       cv::putText(display_img, line.str(), text_pos, font, text_scale, text_color, text_thickness, line_type);
     }
 
-    cv::imshow("manual_pose_solver", display_img);
+    cv::Mat result = cv::Mat(display_img.rows, display_img.cols + space_for_overview, CV_8UC3, 0.0);
+
+    display_img.copyTo(result(cv::Rect(0, 0, display_img.cols, display_img.rows)));
+    field.overview(&result, drawing_color, 1.0, points_in_world[point_index], display_img.rows, display_img.cols);
+
+    cv::imshow("manual_pose_solver", result);
+
     char key = cv::waitKey(20);
     if (key == (char)255)
       continue;

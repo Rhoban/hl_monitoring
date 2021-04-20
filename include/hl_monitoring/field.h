@@ -111,6 +111,12 @@ public:
   double getArenaWidth() const;
 
   /**
+   * Generates a flat drawing of the terrain
+   */
+  void overview(const cv::Mat* tag_imag, const cv::Scalar& line_color, double line_thickness, const cv::Point3f circle,
+                int rows, int cols);
+
+  /**
    * Radius of the ball [m]
    */
   double ball_radius;
@@ -174,6 +180,16 @@ public:
    *  From one side of the field to the other (lines included) [m]
    */
   double field_width;
+
+  /**
+   * Length of the penalty area
+   */
+  double penalty_area_length;
+
+  /**
+   * Width of the penalty area
+   */
+  double penalty_area_width;
 
 private:
   /**

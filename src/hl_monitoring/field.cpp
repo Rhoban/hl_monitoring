@@ -79,9 +79,11 @@ Field::Field()
   goal_width = 2.60;
   goal_depth = 0.60;
   goal_area_length = 1.00;
-  goal_area_width = 5.00;
+  goal_area_width = 3.00;
   field_length = 9.00;
   field_width = 6.00;
+  penalty_area_length = 2.00;
+  penalty_area_width = 5.00;
   updateAll();
 }
 
@@ -101,6 +103,12 @@ Json::Value Field::toJson() const
   v["goal_area_width"] = goal_area_width;
   v["field_length"] = field_length;
   v["field_width"] = field_width;
+
+  if (penalty_area_length >= 0.0)
+  {
+    v["penalty_area_length"] = penalty_area_length;
+    v["penalty_area_width"] = penalty_area_width;
+  }
   return v;
 }
 
@@ -119,6 +127,12 @@ void Field::fromJson(const Json::Value& v)
   readVal(v, "goal_area_width", &goal_area_width);
   readVal(v, "field_length", &field_length);
   readVal(v, "field_width", &field_width);
+
+  penalty_area_length = -1;
+  penalty_area_width = -1;
+  tryReadVal(v, "penalty_area_length", &penalty_area_width);
+  tryReadVal(v, "penalty_area_width", &penalty_area_length);
+
   updateAll();
 }
 
@@ -233,6 +247,23 @@ void Field::updatePointsOfInterest()
   points_of_interest["post_base+-"] = cv::Point3f(goal_x, -goal_y, 0);
   points_of_interest["post_base-+"] = cv::Point3f(-goal_x, goal_y, 0);
   points_of_interest["post_base--"] = cv::Point3f(-goal_x, -goal_y, 0);
+
+  if (penalty_area_length >= 0.0)
+  {
+    double pa_x = field_length / 2 - penalty_area_length;
+    double pa_y = penalty_area_width / 2;
+    points_of_interest["penalty_area_corner++"] = cv::Point3f(pa_x, pa_y, 0);
+    points_of_interest["penalty_area_corner+-"] = cv::Point3f(pa_x, -pa_y, 0);
+    points_of_interest["penalty_area_corner-+"] = cv::Point3f(-pa_x, pa_y, 0);
+    points_of_interest["penalty_area_corner--"] = cv::Point3f(-pa_x, -pa_y, 0);
+
+    double pat_x = field_length / 2;
+    double pat_y = penalty_area_width / 2;
+    points_of_interest["penalty_area_t++"] = cv::Point3f(pat_x, pat_y, 0);
+    points_of_interest["penalty_area_t+-"] = cv::Point3f(pat_x, -pat_y, 0);
+    points_of_interest["penalty_area_t-+"] = cv::Point3f(-pat_x, pat_y, 0);
+    points_of_interest["penalty_area_t--"] = cv::Point3f(-pat_x, -pat_y, 0);
+  }
 }
 
 void Field::updateWhiteLines()
@@ -249,6 +280,16 @@ void Field::updateWhiteLines()
   white_lines.push_back({ getPoint("goal_area_t-+"), getPoint("goal_area_corner-+") });
   white_lines.push_back({ getPoint("goal_area_corner-+"), getPoint("goal_area_corner--") });
   white_lines.push_back({ getPoint("goal_area_corner--"), getPoint("goal_area_t--") });
+
+  if (penalty_area_length >= 0.0)
+  {
+    white_lines.push_back({ getPoint("penalty_area_t++"), getPoint("penalty_area_corner++") });
+    white_lines.push_back({ getPoint("penalty_area_corner++"), getPoint("penalty_area_corner+-") });
+    white_lines.push_back({ getPoint("penalty_area_corner+-"), getPoint("penalty_area_t+-") });
+    white_lines.push_back({ getPoint("penalty_area_t-+"), getPoint("penalty_area_corner-+") });
+    white_lines.push_back({ getPoint("penalty_area_corner-+"), getPoint("penalty_area_corner--") });
+    white_lines.push_back({ getPoint("penalty_area_corner--"), getPoint("penalty_area_t--") });
+  }
 }
 
 void Field::updateArenaBorders()
@@ -402,4 +443,82 @@ double Field::getArenaWidth() const
   return field_width + 2 * border_strip_width_y;
 }
 
+void Field::overview(const cv::Mat* tag_img, const cv::Scalar& line_color, double line_thickness,
+                     const cv::Point3f circle, int rows = 0, int cols = 0)
+{
+  // size of the field in meters
+  float max_size_x = field_length + 2 * border_strip_width_x;
+  float max_size_y = field_width + 2 * border_strip_width_x;
+  float ratio = max_size_x / max_size_y;
+
+  // width and height of the displayed field in pixels
+  float width = tag_img->cols - cols;
+  float height = (float)width * ratio;
+
+  // resize factor to give space to the markers
+  float resize = 0.8f;
+  // factors to convert from meters to pixels
+  float multiplier_y = ((float)width) / max_size_y * resize;
+  float multiplier_x = ((float)height) / max_size_x * resize;
+  // offsets
+  float offx = cols + width / 2.0f;
+  float offy = height / 2.0f;
+
+  // generation of the lines
+  for (const auto& segment : getWhiteLines())
+  {
+    cv::Point2f p1, p2;
+    p1 = cv::Point2f(segment.first.y * multiplier_x + offx, -segment.first.x * multiplier_y + offy);
+    p2 = cv::Point2f(segment.second.y * multiplier_x + offx, -segment.second.x * multiplier_y + offy);
+    cv::line(*tag_img, p1, p2, line_color, line_thickness, cv::LINE_AA);
+  }
+
+  // generation of the point of interest markers
+  for (const auto& entry : poi_by_type)
+  {
+    const std::vector<cv::Point3f>& field_positions = entry.second;
+    cv::MarkerTypes marker;
+    float size = (multiplier_x + multiplier_y) / 4.0;
+    cv::Scalar col(255, 100, 100);
+    switch (entry.first)
+    {
+      case ArenaCorner:
+        marker = cv::MARKER_CROSS;
+        break;
+      case LineCorner:
+        marker = cv::MARKER_SQUARE;
+        break;
+      case T:
+        marker = cv::MARKER_CROSS;
+        size *= 0.75;
+        break;
+      case X:
+        marker = cv::MARKER_TILTED_CROSS;
+        break;
+      case Center:
+        marker = cv::MARKER_STAR;
+        break;
+      case PenaltyMark:
+        marker = cv::MARKER_CROSS;
+        break;
+      case PostBase:
+        marker = cv::MARKER_DIAMOND;
+        size *= 0.75;
+        break;
+      default:
+        marker = cv::MARKER_TRIANGLE_UP;
+        break;
+    }
+
+    for (const auto& position : field_positions)
+    {
+      cv::Point2f coord = cv::Point2f(position.y * multiplier_x + offx, -position.x * multiplier_y + offy);
+      cv::drawMarker(*tag_img, coord, col, marker, size, line_thickness);
+    }
+  }
+
+  // generation of the red circle surrounding the current point of interest
+  cv::Point2f coord(circle.y * multiplier_x + offx, -circle.x * multiplier_y + offy);
+  cv::circle(*tag_img, coord, (multiplier_x + multiplier_y) / 4.0, cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
+}
 }  // namespace hl_monitoring

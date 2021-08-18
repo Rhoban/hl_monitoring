@@ -5,7 +5,7 @@
 #include <hl_monitoring/field.h>
 
 #include <opencv2/core.hpp>
-
+#include <opencv2/calib3d.hpp>
 namespace hl_monitoring
 {
 /**
@@ -29,9 +29,13 @@ public:
 
   static bool solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
                         const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
-                        cv::Mat* tvec);
+                        cv::Mat* tvec, bool useExtrinsicGuess = false);
   static bool solvePose(const std::vector<hl_communication::Match2D3DMsg>& matches,
-                        const hl_communication::IntrinsicParameters& camera_parameters, hl_communication::Pose3D* pose);
+                        const hl_communication::IntrinsicParameters& camera_parameters, hl_communication::Pose3D* pose,
+                        bool useExtrinsicGuess = false);
+  static void setPnpMethod(int pnp_method_id);
+
+  static cv::SolvePnPMethod pnp_method;
 
 private:
   /**

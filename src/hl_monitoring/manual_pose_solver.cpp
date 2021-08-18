@@ -12,6 +12,7 @@ using namespace hl_communication;
 
 namespace hl_monitoring
 {
+cv::SolvePnPMethod ManualPoseSolver::pnp_method;
 ManualPoseSolver::ManualPoseSolver(const cv::Mat& img, const IntrinsicParameters& camera_parameters, const Field& field)
   : field(field), calibration_img(img.clone()), point_index(0)
 {
@@ -35,7 +36,49 @@ ManualPoseSolver::~ManualPoseSolver()
 {
   cv::destroyWindow("manual_pose_solver");
 }
+void ManualPoseSolver::setPnpMethod(int pnp_method_id)
+{ /*
+ solve_methods :
+   SOLVEPNP_ITERATIVE Iterative method is based on a Levenberg-Marquardt optimization. In this case the function
+ finds such a pose that minimizes reprojection error, that is the sum of squared distances between the observed
+ projections imagePoints and the projected (using projectPoints ) objectPoints .
+ 0/default -> cv::SOLVEPNP_ITERATIVE
+ 1 -> cv::SOLVEPNP_P3P
+ 2 -> cv::SOLVEPNP_AP3P
+ 3 -> cv::SOLVEPNP_EPNP
+ 4 -> cv::SOLVEPNP_DLS
+ 5-> cv::SOLVEPNP_UPNP
+ 6 -> cv::SOLVEPNP_IPPE
+ 7 -> cv::SOLVEPNP_IPPE_SQUARE
+*/
 
+  switch (pnp_method_id)
+  {
+    case 1:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_P3P;
+      break;
+    case 2:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_AP3P;
+      break;
+    case 3:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_EPNP;
+      break;
+    case 4:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_DLS;
+      break;
+    case 5:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_UPNP;
+      break;
+    case 6:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_IPPE;
+      break;
+    case 7:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_IPPE_SQUARE;
+      break;
+    default:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_ITERATIVE;
+  }
+}
 void ManualPoseSolver::updatePose()
 {
   std::vector<cv::Point3f> object_points;
@@ -72,16 +115,52 @@ void ManualPoseSolver::exportMatches(std::vector<hl_communication::Match2D3DMsg>
 
 bool ManualPoseSolver::solvePose(const std::vector<cv::Point2f>& img_pos, const std::vector<cv::Point3f>& obj_pos,
                                  const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
-                                 cv::Mat* tvec)
+                                 cv::Mat* tvec, bool useExtrinsicGuess)
 {
   if (img_pos.size() < 4)
     return false;
-  cv::solvePnP(obj_pos, img_pos, camera_matrix, distortion_coefficients, *rvec, *tvec);
+  if ((ManualPoseSolver::pnp_method == cv::SOLVEPNP_P3P) & (img_pos.size() != 4))
+    return false;
+  std::vector<cv::Mat> rvecs, tvecs;
+  if ((*rvec).empty() || (*tvec).empty())
+    useExtrinsicGuess = false;
+  cv::solvePnPGeneric(obj_pos, img_pos, camera_matrix, distortion_coefficients, rvecs, tvecs, useExtrinsicGuess,
+                      ManualPoseSolver::pnp_method, *rvec, *tvec);
+
+  int best_id = 0;
+  float min_tvec_error = 999.0f;
+  cv::Mat current_tvec;
+
+  if (!(tvec->empty()))
+  {
+    for (int i = 0; i < tvecs.size(); i++)
+    {
+      current_tvec = tvecs[i];
+
+      float tvec_error = 0;
+
+      for (int j = 0; j < current_tvec.size().height; j++)
+      {
+        tvec_error +=
+            (tvec->at<double>(j) - current_tvec.at<double>(j)) * (tvec->at<double>(j) - current_tvec.at<double>(j));
+      }
+      if (tvec_error < min_tvec_error)
+      {
+        best_id = i;
+        min_tvec_error = tvec_error;
+      }
+    }
+  }
+
+  *rvec = rvecs[best_id];
+  *tvec = tvecs[best_id];
+  std::cout << *tvec << *rvec << std::endl;
+  // cv::solvePnP(obj_pos, img_pos, camera_matrix, distortion_coefficients, *rvec, *tvec);
   return true;
 }
 
 bool ManualPoseSolver::solvePose(const std::vector<Match2D3DMsg>& matches, const IntrinsicParameters& camera_parameters,
-                                 Pose3D* pose)
+                                 Pose3D* pose, bool useExtrinsicGuess)
 {
   std::vector<cv::Point2f> img_pos;
   std::vector<cv::Point3f> obj_pos;
@@ -89,7 +168,7 @@ bool ManualPoseSolver::solvePose(const std::vector<Match2D3DMsg>& matches, const
   cv::Mat camera_matrix, distortion_coefficients, rvec, tvec;
   cv::Size img_size;
   intrinsicToCV(camera_parameters, &camera_matrix, &distortion_coefficients, &img_size);
-  if (solvePose(img_pos, obj_pos, camera_matrix, distortion_coefficients, &rvec, &tvec))
+  if (solvePose(img_pos, obj_pos, camera_matrix, distortion_coefficients, &rvec, &tvec, useExtrinsicGuess))
   {
     cvToPose3D(rvec, tvec, pose);
     return true;

@@ -38,10 +38,6 @@ ManualPoseSolver::~ManualPoseSolver()
 
 void ManualPoseSolver::updatePose()
 {
-  if (points_in_img.size() < 4)
-  {
-    return;
-  }
   std::vector<cv::Point3f> object_points;
   std::vector<cv::Point2f> img_points;
   for (const auto& entry : points_in_img)
@@ -50,7 +46,14 @@ void ManualPoseSolver::updatePose()
     object_points.push_back(obj_point);
     img_points.push_back(entry.second);
   }
-  cv::solvePnP(object_points, img_points, camera_matrix, distortion_coefficients, rvec, tvec);
+  cv::Mat rvec_copy = rvec.clone();
+  cv::Mat tvec_copy = tvec.clone();
+  // The update of tvec and rvec is only performed is the 'solvePose' operation is successful
+  if (solvePose(img_points, object_points, camera_matrix, distortion_coefficients, &rvec_copy, &tvec_copy))
+  {
+    rvec = rvec_copy;
+    tvec = tvec_copy;
+  }
 }
 
 void ManualPoseSolver::exportMatches(std::vector<hl_communication::Match2D3DMsg>* matches)

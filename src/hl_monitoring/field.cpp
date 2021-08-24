@@ -456,7 +456,7 @@ void Field::overview(const cv::Mat* tag_img, const cv::Scalar& line_color, doubl
   float height = (float)width * ratio;
 
   // resize factor to give space to the markers
-  float resize = 0.8f;
+  float resize = 0.6f;
   // factors to convert from meters to pixels
   float multiplier_y = ((float)width) / max_size_y * resize;
   float multiplier_x = ((float)height) / max_size_x * resize;
@@ -512,13 +512,13 @@ void Field::overview(const cv::Mat* tag_img, const cv::Scalar& line_color, doubl
 
     for (const auto& position : field_positions)
     {
-      cv::Point2f coord = cv::Point2f(position.y * multiplier_x + offx, -position.x * multiplier_y + offy);
+      cv::Point2f coord = cv::Point2f(-position.y * multiplier_x + offx, -position.x * multiplier_y + offy);
       cv::drawMarker(*tag_img, coord, col, marker, size, line_thickness);
     }
   }
 
   // generation of the red circle surrounding the current point of interest
-  cv::Point2f coord(circle.y * multiplier_x + offx, -circle.x * multiplier_y + offy);
+  cv::Point2f coord(-circle.y * multiplier_x + offx, -circle.x * multiplier_y + offy);
   cv::circle(*tag_img, coord, (multiplier_x + multiplier_y) / 4.0, cv::Scalar(0, 0, 255), 1, cv::LINE_AA);
 }
 }  // namespace hl_monitoring

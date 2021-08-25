@@ -36,48 +36,79 @@ ManualPoseSolver::~ManualPoseSolver()
 {
   cv::destroyWindow("manual_pose_solver");
 }
-void ManualPoseSolver::setPnpMethod(int pnp_method_id)
-{ /*
- solve_methods :
-   SOLVEPNP_ITERATIVE Iterative method is based on a Levenberg-Marquardt optimization. In this case the function
- finds such a pose that minimizes reprojection error, that is the sum of squared distances between the observed
- projections imagePoints and the projected (using projectPoints ) objectPoints .
- 0/default -> cv::SOLVEPNP_ITERATIVE
- 1 -> cv::SOLVEPNP_P3P
- 2 -> cv::SOLVEPNP_AP3P
- 3 -> cv::SOLVEPNP_EPNP
- 4 -> cv::SOLVEPNP_DLS
- 5-> cv::SOLVEPNP_UPNP
- 6 -> cv::SOLVEPNP_IPPE
- 7 -> cv::SOLVEPNP_IPPE_SQUARE
-*/
 
+void ManualPoseSolver::setPnpMethod(int pnp_method_id)
+{
+  /*
+  solve_methods :
+  cv::SOLVEPNP_ITERATIVE = 0 (default),
+  cv::SOLVEPNP_EPNP = 1,
+  cv::SOLVEPNP_P3P = 2,
+  cv::SOLVEPNP_DLS = 3,
+  cv::SOLVEPNP_UPNP = 4,
+  cv::SOLVEPNP_AP3P = 5,
+  cv::SOLVEPNP_IPPE = 6,
+  cv::SOLVEPNP_IPPE_SQUARE = 7,
+  [cv::SOLVEPNP_SQPNP = 8 does not exist on opencv4.2,
+  ref:https://docs.opencv.org/4.2.0/d9/d0c/group__calib3d.html#ga357634492a94efe8858d0ce1509da869]
+}
+*/
   switch (pnp_method_id)
   {
+    case 0:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_ITERATIVE;
+      break;
     case 1:
-      ManualPoseSolver::pnp_method = cv::SOLVEPNP_P3P;
-      break;
-    case 2:
-      ManualPoseSolver::pnp_method = cv::SOLVEPNP_AP3P;
-      break;
-    case 3:
       ManualPoseSolver::pnp_method = cv::SOLVEPNP_EPNP;
       break;
-    case 4:
+    case 2:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_P3P;
+      break;
+    case 3:
       ManualPoseSolver::pnp_method = cv::SOLVEPNP_DLS;
       break;
-    case 5:
+    case 4:
       ManualPoseSolver::pnp_method = cv::SOLVEPNP_UPNP;
+      break;
+    case 5:
+      ManualPoseSolver::pnp_method = cv::SOLVEPNP_AP3P;
       break;
     case 6:
       ManualPoseSolver::pnp_method = cv::SOLVEPNP_IPPE;
       break;
     case 7:
       ManualPoseSolver::pnp_method = cv::SOLVEPNP_IPPE_SQUARE;
+
       break;
     default:
-      ManualPoseSolver::pnp_method = cv::SOLVEPNP_ITERATIVE;
+      throw std::invalid_argument("This pnp method is not available");
+      /*Does not exist on opencv4.2
+      https://docs.opencv.org/4.2.0/d9/d0c/group__calib3d.html#ga357634492a94efe8858d0ce1509da869
+        case 8:
+        ManualPoseSolver::pnp_method = cv::SOLVEPNP_SQPNP;
+        break;*/
   }
+}
+
+bool ManualPoseSolver::checkNbPointsForSolver(int nb_points)
+{
+  if (((ManualPoseSolver::pnp_method == cv::SOLVEPNP_IPPE_SQUARE) ||
+       (ManualPoseSolver::pnp_method == cv::SOLVEPNP_AP3P) || (ManualPoseSolver::pnp_method == cv::SOLVEPNP_P3P)) &&
+      (nb_points != 4))
+  {
+    return false;
+  }
+
+  else if (ManualPoseSolver::pnp_method == cv::SOLVEPNP_ITERATIVE)
+  {
+    if (nb_points < 6)
+      return false;
+  }
+  else if (nb_points < 4)  // modified for dlt
+  {
+    return false;
+  }
+  return true;
 }
 void ManualPoseSolver::updatePose()
 {
@@ -117,12 +148,10 @@ bool ManualPoseSolver::solvePose(const std::vector<cv::Point2f>& img_pos, const 
                                  const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat* rvec,
                                  cv::Mat* tvec, bool useExtrinsicGuess)
 {
-  if (img_pos.size() < 4)
-    return false;
-  if ((ManualPoseSolver::pnp_method == cv::SOLVEPNP_P3P) & (img_pos.size() != 4))
+  if (!ManualPoseSolver::checkNbPointsForSolver(img_pos.size()))
     return false;
   std::vector<cv::Mat> rvecs, tvecs;
-  if ((*rvec).empty() || (*tvec).empty())
+  if (rvec->empty() || tvec->empty())
     useExtrinsicGuess = false;
   cv::solvePnPGeneric(obj_pos, img_pos, camera_matrix, distortion_coefficients, rvecs, tvecs, useExtrinsicGuess,
                       ManualPoseSolver::pnp_method, *rvec, *tvec);
@@ -151,12 +180,16 @@ bool ManualPoseSolver::solvePose(const std::vector<cv::Point2f>& img_pos, const 
       }
     }
   }
-
-  *rvec = rvecs[best_id];
-  *tvec = tvecs[best_id];
-  std::cout << *tvec << *rvec << std::endl;
-  // cv::solvePnP(obj_pos, img_pos, camera_matrix, distortion_coefficients, *rvec, *tvec);
-  return true;
+  if (rvecs.size() > 0 && tvecs.size() > 0)
+  {
+    if (!rvecs[best_id].empty() && !tvecs[best_id].empty())
+    {
+      *rvec = rvecs[best_id];
+      *tvec = tvecs[best_id];
+      return true;
+    }
+  }
+  return false;
 }
 
 bool ManualPoseSolver::solvePose(const std::vector<Match2D3DMsg>& matches, const IntrinsicParameters& camera_parameters,
@@ -203,7 +236,6 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
     cv::Mat drawing_img = display_img.clone();
     cv::Scalar drawing_color(255, 0, 255);
     cv::Scalar guess_color(0, 0, 0);
-
     if (has_guess)
     {
       field.tagLines(camera_matrix, distortion_coefficients, *rvec_out, *tvec_out, &drawing_img, guess_color, 2.0, 30);
@@ -213,7 +245,7 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
     {
       cv::drawMarker(drawing_img, entry.second, drawing_color, cv::MARKER_TILTED_CROSS, 10, 2, cv::LINE_AA);
     }
-    if (points_in_img.size() >= 4)
+    if (ManualPoseSolver::checkNbPointsForSolver(points_in_img.size()))
     {
       field.tagLines(camera_matrix, distortion_coefficients, rvec, tvec, &drawing_img, drawing_color, 2.0, 30);
       tryDrawHelper(rvec, tvec, drawing_color, &drawing_img);
@@ -273,11 +305,14 @@ bool ManualPoseSolver::solve(cv::Mat* rvec_out, cv::Mat* tvec_out, bool has_gues
         printHelp();
     }
   }
-  if (points_in_img.size() >= 4)
+  if (ManualPoseSolver::checkNbPointsForSolver(points_in_img.size()))
   {
-    *rvec_out = rvec;
-    *tvec_out = tvec;
-    return true;
+    if (!rvec.empty() && !tvec.empty())
+    {
+      *rvec_out = rvec;
+      *tvec_out = tvec;
+      return true;
+    }
   }
   return false;
 }

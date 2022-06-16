@@ -1,15 +1,17 @@
 #include "hl_monitoring/field.h"
 
 #include <hl_communication/utils.h>
-
 #include <opencv2/calib3d.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <RhIO.hpp>
 
 #include <fstream>
 #include <iostream>
 
 using namespace hl_communication;
+
+//RhIO::Bind* binded = nullptr;
 
 namespace hl_monitoring
 {
@@ -68,7 +70,8 @@ const std::vector<Field::POIType>& Field::getPOITypeValues()
 
 Field::Field()
 {
-  ball_radius = 0.075;
+//  ball_radius = 0.075;
+  ball_radius = 0.1;
   /// Expected field sizes
   line_width = 0.05;
   center_radius = 0.75;
@@ -85,6 +88,40 @@ Field::Field()
   penalty_area_length = 2.00;
   penalty_area_width = 5.00;
   updateAll();
+
+  bind = new RhIO::Bind("field");
+
+  bind->bindNew("field_length", field_length)->comment("Field length")->defaultValue(field_length);
+  bind->bindNew("field_width", field_width)->comment("Field width")->defaultValue(field_width);
+  bind->bindNew("penalty_mark_dist", penalty_mark_dist)->comment("Penalty mark distance")->defaultValue(penalty_mark_dist);
+  bind->bindNew("goal_width", goal_width)->comment("Goal width")->defaultValue(goal_width);
+  bind->bindNew("goal_area_length", goal_area_length)->comment("Goal area length")->defaultValue(goal_area_length);
+  bind->bindNew("goal_area_width", goal_area_width)->comment("Goal area width")->defaultValue(goal_area_width);
+  bind->bindNew("center_radius", center_radius)->comment("Center radius")->defaultValue(center_radius);
+  bind->bindNew("penalty_area_length", penalty_area_length)->comment("Penalty area length")->defaultValue(penalty_area_length);
+  bind->bindNew("penalty_area_width", penalty_area_width)->comment("Penalty area width")->defaultValue(penalty_area_width);
+  bind->bindNew("ball_radius", ball_radius)->comment("Ball radius")->defaultValue(ball_radius);
+  bind->bindNew("border_strip_width_x", border_strip_width_x)->comment("Border strip width x")->defaultValue(border_strip_width_x);
+  bind->bindNew("border_strip_width_y", border_strip_width_y)->comment("Border strip width y")->defaultValue(border_strip_width_y);
+
+  bind->pull();
+}
+
+void Field::updateFieldDimensions() {
+  bind->node().setFloat("field_length", field_length);
+  bind->node().setFloat("field_width", field_width);
+  bind->node().setFloat("penalty_mark_dist", penalty_mark_dist);
+  bind->node().setFloat("goal_width", goal_width);
+  bind->node().setFloat("goal_area_length", goal_area_length);
+  bind->node().setFloat("goal_area_width", goal_area_width);
+  bind->node().setFloat("center_radius", center_radius);
+  bind->node().setFloat("penalty_area_length", penalty_area_length);
+  bind->node().setFloat("penalty_area_width", penalty_area_width);
+  bind->node().setFloat("ball_radius", ball_radius);
+  bind->node().setFloat("border_strip_width_x", border_strip_width_x);
+  bind->node().setFloat("border_strip_width_y", border_strip_width_y);
+
+  bind->pull();
 }
 
 Json::Value Field::toJson() const
@@ -103,12 +140,9 @@ Json::Value Field::toJson() const
   v["goal_area_width"] = goal_area_width;
   v["field_length"] = field_length;
   v["field_width"] = field_width;
+  v["penalty_area_length"] = penalty_area_length;
+  v["penalty_area_width"] = penalty_area_width;
 
-  if (penalty_area_length >= 0.0)
-  {
-    v["penalty_area_length"] = penalty_area_length;
-    v["penalty_area_width"] = penalty_area_width;
-  }
   return v;
 }
 
@@ -127,13 +161,12 @@ void Field::fromJson(const Json::Value& v)
   readVal(v, "goal_area_width", &goal_area_width);
   readVal(v, "field_length", &field_length);
   readVal(v, "field_width", &field_width);
+  readVal(v, "penalty_area_length", &penalty_area_length);
+  readVal(v, "penalty_area_width", &penalty_area_width);
 
-  penalty_area_length = -1;
-  penalty_area_width = -1;
-  tryReadVal(v, "penalty_area_length", &penalty_area_width);
-  tryReadVal(v, "penalty_area_width", &penalty_area_length);
-
+  updateFieldDimensions();
   updateAll();
+
 }
 
 void Field::loadFile(const std::string& path)

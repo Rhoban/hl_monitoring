@@ -30,7 +30,7 @@ endforeach (DIRECTORY)
 
 
 add_library (${PROJECT_NAME} SHARED ${PROTO_SOURCES} ${ALL_SOURCES} ${PROTO_DUMMY_FILE})
-target_link_libraries(${PROJECT_NAME} PUBLIC hl_communication ${OpenCV_LIBS})
+target_link_libraries(${PROJECT_NAME} PUBLIC RhIO hl_communication ${OpenCV_LIBS})
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${OpenCV_INCLUDE_DIRS}
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

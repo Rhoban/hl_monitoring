@@ -1,9 +1,10 @@
 #pragma once
 
 #include <hl_communication/camera.pb.h>
-
 #include <opencv2/core.hpp>
 #include <json/json.h>
+
+#include <RhIO.hpp>
 
 namespace hl_monitoring
 {
@@ -59,21 +60,21 @@ public:
     PostBase,
     Unknown
   };
-  /**
+
+    /**
    * Map of points of interests ordered by Type
    */
   typedef std::map<POIType, std::vector<cv::Point3f>> POICollection;
-
   static Field::POIType string2POIType(const std::string& str);
-  static std::string poiType2String(Field::POIType type);
-  static const std::vector<Field::POIType>& getPOITypeValues();
 
+    static std::string poiType2String(Field::POIType type);
+    static const std::vector<Field::POIType>& getPOITypeValues();
   Field();
 
   Json::Value toJson() const;
-  void fromJson(const Json::Value& v);
-  void loadFile(const std::string& path);
 
+    void fromJson(const Json::Value& v);
+    void loadFile(const std::string& path);
   /**
    * Return true if the given position is inside the arena
    */
@@ -85,17 +86,17 @@ public:
   const cv::Point3f& getPoint(const std::string& name) const;
 
   const std::map<std::string, cv::Point3f>& getPointsOfInterest() const;
-  const std::vector<Segment>& getArenaBorders() const;
-  const std::vector<Segment>& getWhiteLines() const;
 
+    const std::vector<Segment>& getArenaBorders() const;
+    const std::vector<Segment>& getWhiteLines() const;
   /**
    * Returns the goals (first the x- and then the x+)
    */
   const std::vector<Segment>& getGoals() const;
 
   const std::vector<cv::Point3f>& getGoalPosts() const;
-  const std::vector<cv::Point3f>& getPenaltyMarks() const;
 
+    const std::vector<cv::Point3f>& getPenaltyMarks() const;
   const POICollection& getPointsOfInterestByType() const;
 
   void tagPointsOfInterest(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
@@ -103,13 +104,13 @@ public:
 
   void tagLines(const hl_communication::CameraMetaInformation& camera_information, cv::Mat* tag_img,
                 const cv::Scalar& line_color, double line_thickness, int nb_segments = 1) const;
-  void tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
+
+    void tagLines(const cv::Mat& camera_matrix, const cv::Mat& distortion_coeffs, const cv::Mat& rvec,
                 const cv::Mat& tvec, cv::Mat* tag_img, const cv::Scalar& line_color, double line_thickness,
                 int nb_segments = 1) const;
-
   double getArenaLength() const;
-  double getArenaWidth() const;
 
+    double getArenaWidth() const;
   /**
    * Generates a flat drawing of the terrain
    */
@@ -191,12 +192,14 @@ public:
    */
   double penalty_area_width;
 
+  RhIO::Bind* bind;
+
 private:
-  /**
+    /**
    * Synchronize all the features with the current field dimensions
    */
   void updateAll();
-  /**
+    /**
    * Synchronize the points of interests with current size of the field
    */
   void updatePointsOfInterest();
@@ -225,6 +228,8 @@ private:
    * Synchronize poi_by_type based on points_of_interest
    */
   void updatePointsOfInterestByType();
+
+  void updateFieldDimensions();
 
   /**
    * Stores points of interest visually identifiable of the field along with a given name.

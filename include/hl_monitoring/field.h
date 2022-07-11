@@ -78,7 +78,7 @@ public:
   /**
    * Return true if the given position is inside the arena
    */
-  bool isInArena(const cv::Point2f& pos_in_field) const;
+  bool isInArena(const cv::Point2f& pos_in_field, double margin=0.) const;
 
   /**
    * Throws an out_of_range exception on invalid name

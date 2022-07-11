@@ -181,10 +181,10 @@ void Field::loadFile(const std::string& path)
   fromJson(root);
 }
 
-bool Field::isInArena(const cv::Point2f& pos_in_field) const
+bool Field::isInArena(const cv::Point2f& pos_in_field, double margin) const
 {
-  double half_length = getArenaLength() / 2;
-  double half_width = getArenaWidth() / 2;
+  double half_length = margin + getArenaLength() / 2;
+  double half_width = margin + getArenaWidth() / 2;
   return std::fabs(pos_in_field.x) < half_length && std::fabs(pos_in_field.y) < half_width;
 }
 

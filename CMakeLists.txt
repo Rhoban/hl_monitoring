@@ -18,22 +18,50 @@ set(SOURCES_DIRECTORIES
   src/hl_monitoring/drawers
   )
 
+set(ALL_SOURCES
+src/hl_monitoring/calibrated_image.cpp
+src/hl_monitoring/field.cpp
+src/hl_monitoring/top_view_drawer.cpp
+src/hl_monitoring/image_provider.cpp
+src/hl_monitoring/manual_pose_solver.cpp
+src/hl_monitoring/monitoring_manager.cpp
+src/hl_monitoring/opencv_image_provider.cpp
+src/hl_monitoring/replay_image_provider.cpp
+src/hl_monitoring/replay_viewer.cpp
+src/hl_monitoring/team_config.cpp
+src/hl_monitoring/team_manager.cpp
+src/hl_monitoring/drawers/arrow_drawer.cpp
+src/hl_monitoring/drawers/captain_drawer.cpp
+src/hl_monitoring/drawers/geometry.cpp
+src/hl_monitoring/drawers/player_drawer.cpp
+src/hl_monitoring/drawers/position_drawer.cpp
+src/hl_monitoring/drawers/pose_drawer.cpp
+src/hl_monitoring/drawers/team_drawer.cpp
+src/hl_monitoring/drawers/text_drawer.cpp
+)
+
+if (HL_MONITORING_USES_FLYCAPTURE)
+set(SOURCES "${SOURCES}" 
+  src/hl_monitoring/flycap_image_provider.cpp
+)
+endif(HL_MONITORING_USES_FLYCAPTURE)
+
 #Include Sources sub sources
-foreach (DIRECTORY ${SOURCES_DIRECTORIES})
-  include (${DIRECTORY}/sources.cmake)
-  set (PREFIXED_SOURCES)
-  foreach (SOURCE ${SOURCES})
-    set (PREFIXED_SOURCES ${PREFIXED_SOURCES} ${DIRECTORY}/${SOURCE})
-  endforeach (SOURCE)
-  set (ALL_SOURCES ${ALL_SOURCES} ${PREFIXED_SOURCES})
-endforeach (DIRECTORY)
+#foreach (DIRECTORY ${SOURCES_DIRECTORIES})
+#  include (${DIRECTORY}/sources.cmake)
+#  set (PREFIXED_SOURCES)
+#  foreach (SOURCE ${SOURCES})
+#    set (PREFIXED_SOURCES ${PREFIXED_SOURCES} ${DIRECTORY}/${SOURCE})
+#  endforeach (SOURCE)
+#  set (ALL_SOURCES ${ALL_SOURCES} ${PREFIXED_SOURCES})
+#endforeach (DIRECTORY)
 
 
 add_library (${PROJECT_NAME} SHARED ${PROTO_SOURCES} ${ALL_SOURCES} ${PROTO_DUMMY_FILE})
 target_link_libraries(${PROJECT_NAME} PUBLIC RhIO hl_communication ${OpenCV_LIBS})
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${OpenCV_INCLUDE_DIRS}
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
 )
 
 if(HL_MONITORING_USES_FLYCAPTURE)
